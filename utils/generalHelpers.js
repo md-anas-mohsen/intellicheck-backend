@@ -21,3 +21,9 @@ exports.capitalizeEachWord = (sentence) => {
     })
     .join(" ");
 };
+
+exports.generatePasscode = (digits = 6) => {
+  console.log(
+    Math.floor(10 ** digits - 1 + Math.random() * 9 * 10 ** digits - 1)
+  );
+};
