@@ -1,0 +1,26 @@
+const mongoose = require("mongoose");
+
+const courseSchema = mongoose.Schema({
+  courseCode: {
+    type: String,
+    required: [true, "Provide course code"],
+    unique: true,
+  },
+  courseDescription: {
+    type: String,
+    required: [true, "Provide course description"],
+    maxLength: [100, "Cannot exceed 100 characters"],
+  },
+  courseName: {
+    type: String,
+    unique: true,
+    maxLength: [25, "Cannot exceed 25 characters"],
+  },
+  courseEmbeddingUrl: {
+    type: String,
+    default: "",
+    required: true,
+  },
+});
+
+module.exports = mongoose.model("Course", courseSchema);

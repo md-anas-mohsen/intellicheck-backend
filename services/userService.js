@@ -2,7 +2,10 @@ const Student = require("../models/student");
 const Teacher = require("../models/teacher");
 const { setAuthToken, verifyRefreshToken } = require("../utils/authToken");
 const MESSAGES = require("../constants/messages");
-const { applyPagination } = require("../utils/generalHelpers");
+const {
+  applyPagination,
+  generatePasscode,
+} = require("../utils/generalHelpers");
 const { SERVER_ERROR } = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
 const DeviceSession = require("../models/deviceSession");
@@ -325,6 +328,18 @@ exports.getSingleUser = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // const teacherHasClass = await TeacherClass.findOne({
+    //   teacherId: req.user.id,
+    //   courseId: id
+    // })
+
+    // if (!teacherHasClass) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message:
+    //   })
+    // }
+
     const user = await User.findById(id);
 
     if (!user) {
@@ -363,4 +378,18 @@ exports.logout = async (req, res) => {
     success: true,
     message: MESSAGES.LOGOUT_SUCCESS,
   });
+};
+
+exports.forgotPassword = async (req, res, next) => {
+  const { email, role } = req.body;
+
+  const Model = UserModelFactory(role);
+
+  const user = await Model.findOne({
+    email,
+  });
+
+  if (user) {
+    const code = generatePasscode(6);
+  }
 };

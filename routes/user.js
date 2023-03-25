@@ -49,4 +49,10 @@ router.patch(
   userService.updateUser
 );
 
+router.post(
+  "/forgot-password",
+  validator.body(userValidatorSchema.forgotPasswordRequestModel),
+  userService.registerUser
+);
+
 module.exports = router;

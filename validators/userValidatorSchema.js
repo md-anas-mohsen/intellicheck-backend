@@ -22,15 +22,6 @@ const userValidatorSchema = {
     usernameOrEmail: Joi.string().required(),
     role: Joi.string().valid(USER_ROLE.STUDENT, USER_ROLE.TEACHER).required(),
   }),
-  refreshUserTokenRequestModel: Joi.object({
-    refreshToken: Joi.string().required(),
-  }),
-  createUserRequestModel: Joi.object({
-    name: Joi.string().max(25).required(),
-    password: Joi.string().min(6).required(),
-    email: Joi.string().email().required(),
-    role: Joi.string().valid("user", "admin").required(),
-  }),
   userListingRequestModel: Joi.object({
     keyword: Joi.string().allow("").trim().optional(),
     page: Joi.number().empty("").default(1).optional(),
@@ -43,6 +34,26 @@ const userValidatorSchema = {
     direction: Joi.string()
       .valid(ORDER_BY_DIRECTIONS.ASC, ORDER_BY_DIRECTIONS.DESC)
       .optional(),
+  }),
+  forgotPasswordRequestModel: Joi.object({
+    email: Joi.string().email().required(),
+    role: Joi.string().valid(USER_ROLE.STUDENT, USER_ROLE.TEACHER).required(),
+  }),
+  resetPasswordRequestModel: Joi.object({
+    token: Joi.string().required(),
+    newPassword: Joi.string().min(6).required(),
+    confirmNewPassword: Joi.string()
+      .min(6)
+      .valid(Joi.ref("newPassword"))
+      .required()
+      .label("Confirm new password")
+      .messages({ "any.only": "{{#label}} does not match" }),
+  }),
+  verifyOTPRequestModel: Joi.object({
+    code: Joi.string()
+      .length(10)
+      .pattern(/^[0-9]+$/)
+      .required(),
   }),
 };
 
