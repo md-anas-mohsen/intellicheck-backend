@@ -5,7 +5,7 @@ const MESSAGES = require("../constants/messages");
 const { applyPagination } = require("../utils/generalHelpers");
 const { SERVER_ERROR } = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
-const { where } = require("../models/student");
+const DeviceSession = require("../models/deviceSession");
 
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
@@ -348,6 +348,12 @@ exports.getSingleUser = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
+  const { authorization } = req.cookies;
+
+  await DeviceSession.deleteOne({
+    authToken: authorization,
+  });
+
   res.cookie("authorization", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
