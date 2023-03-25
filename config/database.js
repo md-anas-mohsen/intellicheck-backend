@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const connectDB = mongoose.connect(process.env.DB_LOCAL_URI).then((conn) => {
+const connectDB = mongoose.connect(process.env.DB_CLOUD_URI).then((conn) => {
   console.log(`MongoDB connected with HOST: ${conn.connection.host}`);
 });
 
