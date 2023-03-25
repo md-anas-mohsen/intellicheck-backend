@@ -24,7 +24,6 @@ const MESSAGES = {
   PRODUCT_DELETION_FAILURE: "Product failed to delete",
   SUCCESS: "Success",
   LOGOUT_SUCCESS: "Logged out successfully",
-  ORDER_CREATION_SUCCESS: "Order placed successfully",
 };
 
 module.exports = MESSAGES;

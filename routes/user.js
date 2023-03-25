@@ -49,6 +49,4 @@ router.patch(
   userService.updateUser
 );
 
-router.delete("/:id", isAuthenticatedUser("admin"), userService.deleteUser);
-
 module.exports = router;

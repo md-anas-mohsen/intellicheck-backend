@@ -1,0 +1,4 @@
+exports.USER_ROLE = {
+  STUDENT: "STUDENT",
+  TEACHER: "TEACHER",
+};

@@ -4,11 +4,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { boolean } = require("joi");
 const { ORDER_BY_DIRECTIONS } = require("../constants/common");
+const { USER_ROLE } = require("../constants/user");
 
-const userSchema = mongoose.Schema({
-  name: {
+const teacherSchema = mongoose.Schema({
+  firstName: {
     type: String,
-    required: [true, "Please enter your name"],
+    required: [true, "Please provide first name"],
+    maxLength: [25, "Name cannot exceed 25 characters"],
+  },
+  lastName: {
+    type: String,
+    required: [true, "Please provide last name"],
     maxLength: [25, "Name cannot exceed 25 characters"],
   },
   email: {
@@ -17,28 +23,16 @@ const userSchema = mongoose.Schema({
     unique: true,
     validate: [validator.isEmail, "Please enter valid email address"],
   },
-  avatar: {
-    public_id: {
-      type: String,
-    },
-    url: {
-      type: String,
-    },
-  },
-  role: {
+  username: {
     type: String,
-    enum: ["admin", "user"],
-    default: "user",
+    required: [true, "Please provide username"],
+    maxLength: [10, "Name cannot exceed 10 characters"],
   },
   password: {
     type: String,
     required: true,
     minlength: [6, "Password must be longer than 6 characters"],
     select: false,
-  },
-  reAuthenticate: {
-    type: Boolean,
-    default: false,
   },
   createdAt: {
     type: Date,
@@ -50,49 +44,53 @@ const userSchema = mongoose.Schema({
   },
 });
 
-userSchema.pre("count", function () {
+teacherSchema.pre("count", function () {
   this.where({ deletedAt: null });
 });
 
-userSchema.pre("find", function () {
+teacherSchema.pre("find", function () {
   this.where({ deletedAt: null });
 });
 
-userSchema.pre("findOne", function () {
+teacherSchema.pre("findOne", function () {
   this.where({ deletedAt: null });
 });
 
-userSchema.pre("save", async function (next) {
+teacherSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.methods.delete = async function () {
+teacherSchema.methods.delete = async function () {
   if (!this.deletedAt) {
     this.deletedAt = Date.now();
     await this.save();
   }
 };
 
-userSchema.methods.comparePassword = async function (password) {
+teacherSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.getJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_AUTH_TOKEN_SECRET, {
-    expiresIn: process.env.JWT_AUTH_TOKEN_EXPIRES_TIME,
-  });
+teacherSchema.methods.getJwtToken = function () {
+  return jwt.sign(
+    { id: this._id, role: USER_ROLE.TEACHER },
+    process.env.JWT_AUTH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.JWT_AUTH_TOKEN_EXPIRES_TIME,
+    }
+  );
 };
 
-userSchema.methods.getJwtRefreshToken = function () {
+teacherSchema.methods.getJwtRefreshToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_REFRESH_TOKEN_SECRET, {
     expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_TIME,
   });
 };
 
-userSchema.statics.searchQuery = function (keyword, queryParams) {
+teacherSchema.statics.searchQuery = function (keyword, queryParams) {
   const stringSearchFields = ["name", "email", "role"];
   const alphaNumericSearchFields = ["_id"];
 
@@ -119,7 +117,7 @@ userSchema.statics.searchQuery = function (keyword, queryParams) {
     };
   }
 
-  let sortableFields = ["_id", "role", "createdAt", "email", "name"];
+  // let sortableFields = ["_id", "role", "createdAt", "email", "name"];
 
   let sortOrder = {};
 
@@ -141,4 +139,4 @@ userSchema.statics.searchQuery = function (keyword, queryParams) {
   return this.find(query).sort(sortOrder);
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Teacher", teacherSchema);
