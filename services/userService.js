@@ -10,6 +10,8 @@ const { SERVER_ERROR } = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
 const DeviceSession = require("../models/deviceSession");
 
+
+
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
     user =

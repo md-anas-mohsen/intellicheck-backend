@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const userService = require("../services/userService");
+const classService = require("../services/classService");
 const userValidatorSchema = require("../validators/userValidatorSchema");
+const classValidatorSchema = require("../validators/classValidatorSchema");
+const announcementValidatorSchema = require("../validators/announcementValidatorSchema");
 const SchemaValidator = require("../middlewares/SchemaValidator");
 const { isAuthenticatedUser } = require("../middlewares/auth");
 const validator = new SchemaValidator();
@@ -21,6 +24,28 @@ router.post(
   validator.body(userValidatorSchema.registerUserRequestModel),
   userService.registerUser
 );
+
+// Class Routes
+router.post(
+  "/create-class",
+  isAuthenticatedUser(),
+  validator.body(classValidatorSchema.createClassRequestModel),
+  classService.createClass
+);
+
+router.post(
+  "/post-announcement",
+  isAuthenticatedUser(),
+  validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
+  classService.postAnnouncement
+);
+
+//router.post(
+ // "/join-class",
+  //isAuthenticatedUser(),
+  //validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
+  //classService.postAnnouncement
+//);
 
 router.post(
   "/login",

@@ -8,10 +8,13 @@ const MESSAGES = {
   LOGIN_SUCCESS: "Logged in successfully",
   REGISTRATION_SUCCESS: "User has been registered successfully",
   USER_CREATION_SUCCESS: "User created successfully",
+  CLASS_CREATION_SUCCESS: "Class created successfully",
+  ANNOUNCEMENT_CREATION_SUCCESS: "Announcement created successfully",
   LOGIN_REQUIRED: "Login to view resource",
   NOT_FOUND: "Not found",
   UPDATED: "Updated",
   USER_NOT_FOUND: "User not found",
+  COURSE_NOT_FOUND: "Course not found",
   USER_UPDATED: "User updated successfully",
   DELETED: "Deleted",
   USER_DELETED: "User deleted successfully",
@@ -24,6 +27,8 @@ const MESSAGES = {
   PRODUCT_DELETION_FAILURE: "Product failed to delete",
   SUCCESS: "Success",
   LOGOUT_SUCCESS: "Logged out successfully",
+  TEACHER_CLASS_NOT_FOUND: "Invalid class id for teacher"
+
 };
 
 module.exports = MESSAGES;
