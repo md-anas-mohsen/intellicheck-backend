@@ -14,6 +14,7 @@ const courseSchema = mongoose.Schema({
   courseName: {
     type: String,
     unique: true,
+    required: [true, "Provide course Name"],
     maxLength: [25, "Cannot exceed 25 characters"],
   },
   courseEmbeddingUrl: {

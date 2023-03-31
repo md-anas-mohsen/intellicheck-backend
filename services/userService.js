@@ -10,6 +10,8 @@ const { SERVER_ERROR } = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
 const DeviceSession = require("../models/deviceSession");
 
+
+
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
     user =
@@ -57,7 +59,7 @@ exports.registerUser = async function (req, res, next) {
   const { username, firstName, lastName, email, password, role } = req.body;
 
   const userExists = await findTeacherOrStudent(role, {
-    $or: [{ email }, { user }],
+    $or: [{ email }, { username }],
   });
 
   if (role === USER_ROLE.STUDENT && !!userExists) {
