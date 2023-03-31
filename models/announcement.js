@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const announcementSchema = mongoose.Schema({
     classCode: {
       type: String,
