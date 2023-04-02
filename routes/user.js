@@ -26,25 +26,25 @@ router.post(
 );
 
 // Class Routes
-router.post(
-  "/create-class",
-  isAuthenticatedUser(),
-  validator.body(classValidatorSchema.createClassRequestModel),
-  classService.createClass
-);
+// router.post(
+//   "/create-class",
+//   isAuthenticatedUser(),
+//   validator.body(classValidatorSchema.createClassRequestModel),
+//   classService.createClass
+// );
 
-router.post(
-  "/post-announcement",
-  isAuthenticatedUser(),
-  validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
-  classService.postAnnouncement
-);
+// router.post(
+//   "/post-announcement",
+//   isAuthenticatedUser(),
+//   validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
+//   classService.postAnnouncement
+// );
 
 //router.post(
- // "/join-class",
-  //isAuthenticatedUser(),
-  //validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
-  //classService.postAnnouncement
+// "/join-class",
+//isAuthenticatedUser(),
+//validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
+//classService.postAnnouncement
 //);
 
 router.post(

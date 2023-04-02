@@ -1,18 +1,17 @@
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
-const fileUpload = require("express-fileupload");
 const morgan = require("morgan");
 const logger = require("./middlewares/logReqRes");
 
 const users = require("./routes/user");
+const classes = require("./routes/class");
 
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(fileUpload());
 app.use(
   morgan(function (tokens, req, res) {
     return [
@@ -30,6 +29,7 @@ app.use(
 );
 
 app.use("/api/users", users);
+app.use("/api/classes", classes);
 
 // app.use(logger);
 
