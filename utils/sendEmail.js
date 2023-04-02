@@ -8,6 +8,7 @@ const sendEmail = async (options) => {
       user: process.env.SMTP_USERNAME,
       pass: process.env.SMTP_PASSWORD,
     },
+    from: process.env.SMTP_FROM_EMAIL,
   });
 
   const message = {
@@ -18,6 +19,7 @@ const sendEmail = async (options) => {
   };
 
   await transport.sendMail(message);
+  console.log(`[EMAIL] Sent email to ${options.email}`);
 };
 
 module.exports = sendEmail;

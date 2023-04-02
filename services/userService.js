@@ -8,9 +8,10 @@ const {
 } = require("../utils/generalHelpers");
 const { SERVER_ERROR } = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
+
 const DeviceSession = require("../models/deviceSession");
-
-
+const StudentRegistrationRequest = require("../models/studentRegistrationRequest");
+const ClassRegistration = require("../models/classRegistration");
 
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
@@ -55,7 +56,7 @@ exports.getUserListing = async (req, res, next) => {
   });
 };
 
-exports.registerUser = async function (req, res, next) {
+exports.registerUser = async function (req, res) {
   const { username, firstName, lastName, email, password, role } = req.body;
 
   const userExists = await findTeacherOrStudent(role, {
@@ -79,6 +80,17 @@ exports.registerUser = async function (req, res, next) {
       password,
       username,
     });
+
+    const pendingRegistrationRequests = await StudentRegistrationRequest.find({
+      email,
+    });
+
+    let registrationData = pendingRegistrationRequests.map((request) => ({
+      classId: request.classId,
+      studentId: user._id,
+    }));
+
+    await ClassRegistration.create(registrationData);
   } catch (error) {
     console.log(error);
     return res.status(500).json({

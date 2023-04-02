@@ -27,8 +27,13 @@ const MESSAGES = {
   PRODUCT_DELETION_FAILURE: "Product failed to delete",
   SUCCESS: "Success",
   LOGOUT_SUCCESS: "Logged out successfully",
-  TEACHER_CLASS_NOT_FOUND: "Invalid class id for teacher"
-
+  TEACHER_CLASS_NOT_FOUND: "Invalid class id for teacher",
+  CLASS_NOT_FOUND: "Class not found",
+  STUDENT_ADDED_TO_CLASS: "Student added to class successfully",
+  STUDENT_REGISTRATION_REQUEST_SENT:
+    "Student will be added to this class once registered",
+  EMAIL_MISSING_IN_CSV_ROW: "A row is missing an email in the CSV uploaded",
+  STUDENT_ALREADY_ADDED_TO_CLASS: "Student is already added to class",
 };
 
 module.exports = MESSAGES;

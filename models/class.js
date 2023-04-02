@@ -6,7 +6,8 @@ const classSchema = mongoose.Schema({
     required: [true, "Provide course code"],
   },
   teacherId: {
-    type: String,
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: "Teacher",
     required: [true, "Provide teacher Id"],
   },
   classDescription: {
@@ -20,7 +21,6 @@ const classSchema = mongoose.Schema({
     required: [true, "Provide class name"],
     maxLength: [25, "Cannot exceed 25 characters"],
   },
-
 });
 
 module.exports = mongoose.model("Class", classSchema);
