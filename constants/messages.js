@@ -34,6 +34,7 @@ const MESSAGES = {
     "Student will be added to this class once registered",
   EMAIL_MISSING_IN_CSV_ROW: "A row is missing an email in the CSV uploaded",
   STUDENT_ALREADY_ADDED_TO_CLASS: "Student is already added to class",
+  CLASS_UPDATED: "Class updated successfully",
 };
 
 module.exports = MESSAGES;

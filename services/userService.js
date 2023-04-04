@@ -13,6 +13,9 @@ const DeviceSession = require("../models/deviceSession");
 const StudentRegistrationRequest = require("../models/studentRegistrationRequest");
 const ClassRegistration = require("../models/classRegistration");
 
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
+const ErrorHandler = require("../utils/errorHandler");
+
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
     user =
@@ -36,7 +39,7 @@ const UserModelFactory = (role) => {
   return Model;
 };
 
-exports.getUserListing = async (req, res, next) => {
+exports.getUserListing = catchAsyncErrors(async (req, res, next) => {
   const { keyword } = req.query;
   const users = await applyPagination(
     User.searchQuery(keyword, {
@@ -54,9 +57,9 @@ exports.getUserListing = async (req, res, next) => {
     count,
     users,
   });
-};
+});
 
-exports.registerUser = async function (req, res) {
+exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   const { username, firstName, lastName, email, password, role } = req.body;
 
   const userExists = await findTeacherOrStudent(role, {
@@ -64,91 +67,55 @@ exports.registerUser = async function (req, res) {
   });
 
   if (role === USER_ROLE.STUDENT && !!userExists) {
-    return res.status(409).json({
-      success: false,
-      message: MESSAGES.EMAIL_ALREADY_REGISTERED,
-    });
+    return next(new ErrorHandler(MESSAGES.EMAIL_ALREADY_REGISTERED, 409));
   }
 
   let user;
   const Model = UserModelFactory(role);
-  try {
-    user = await Model.create({
-      firstName,
-      lastName,
-      email,
-      password,
-      username,
-    });
+  user = await Model.create({
+    firstName,
+    lastName,
+    email,
+    password,
+    username,
+  });
 
-    const pendingRegistrationRequests = await StudentRegistrationRequest.find({
-      email,
-    });
+  const pendingRegistrationRequests = await StudentRegistrationRequest.find({
+    email,
+  });
 
-    let registrationData = pendingRegistrationRequests.map((request) => ({
-      classId: request.classId,
-      studentId: user._id,
-    }));
+  let registrationData = pendingRegistrationRequests.map((request) => ({
+    classId: request.classId,
+    studentId: user._id,
+  }));
 
-    await ClassRegistration.create(registrationData);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error,
-      message: MESSAGES.SERVER_ERROR,
-    });
-  }
+  await ClassRegistration.create(registrationData);
 
   setAuthToken(user, 201, req, res, MESSAGES.REGISTRATION_SUCCESS);
-};
+});
 
-exports.loginUser = async (req, res, next) => {
+exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   const { usernameOrEmail, password, role } = req.body;
 
   let user;
-  try {
-    user = await findTeacherOrStudent(role, {
-      $or: [{ email: usernameOrEmail }, { username: usernameOrEmail }],
-    });
+  user = await findTeacherOrStudent(role, {
+    $or: [{ email: usernameOrEmail }, { username: usernameOrEmail }],
+  });
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error,
-      message: MESSAGES.SERVER_ERROR,
-    });
+  if (!user) {
+    return next(new ErrorHandler("Invalid credentials", 401));
   }
 
-  try {
-    const passwordIsCorrect = await user.comparePassword(password);
+  const passwordIsCorrect = await user.comparePassword(password);
 
-    if (!passwordIsCorrect) {
-      return res.status(401).json({
-        success: false,
-        message: MESSAGES.INCORRECT_PASSWORD,
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-      message: MESSAGES.SERVER_ERROR,
-    });
+  if (!passwordIsCorrect) {
+    return next(new ErrorHandler(MESSAGES.INCORRECT_PASSWORD, 401));
   }
 
   await setAuthToken(user, 200, req, res, MESSAGES.LOGIN_SUCCESS);
-};
+});
 
-exports.getUserProfile = async (req, res) => {
+exports.getUserProfile = catchAsyncErrors(async (req, res) => {
   const Model = UserModelFactory(req.user.role);
   const user = await Model.findById(req.user._id);
 
@@ -156,65 +123,31 @@ exports.getUserProfile = async (req, res) => {
     success: true,
     user,
   });
-};
+});
 
-exports.refreshToken = async (req, res) => {
-  const { refreshToken } = req.body;
-  try {
-    const userId = await verifyRefreshToken(refreshToken);
-
-    const user = await User.findById(userId);
-
-    if (user.reAuthenticate) {
-      return res.status(401).json({
-        success: false,
-        message: MESSAGES.LOGIN_REQUIRED,
-      });
-    }
-
-    await setAuthToken(user, 200, req, res);
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: MESSAGES.INVALID_REFRESH_TOKEN,
-    });
-  }
-};
-
-exports.createUser = async (req, res) => {
+exports.createUser = catchAsyncErrors(async (req, res, next) => {
   const { name, email, role, password } = req.body;
 
   const existingEmail = await this.findTeacherOrStudent(role, { email });
 
   if (existingEmail) {
-    return res.status(409).json({
-      success: false,
-      message: "Email already registered",
-    });
+    return next(new ErrorHandler("Email already registered", 409));
   }
 
-  try {
-    const newUser = await User.create({
-      name,
-      email,
-      role,
-      password,
-    });
+  const newUser = await User.create({
+    name,
+    email,
+    role,
+    password,
+  });
 
-    return res.status(200).json({
-      success: true,
-      message: MESSAGES.USER_CREATION_SUCCESS,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: MESSAGES.SERVER_ERROR,
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.USER_CREATION_SUCCESS,
+  });
+});
 
-exports.updateUser = async (req, res) => {
+exports.updateUser = async (req, res, next) => {
   const { id } = req.params;
   const { name, email, password, role } = req.body;
   const currentUser = req.user;
@@ -319,15 +252,7 @@ exports.deleteUser = async (req, res) => {
     });
   }
 
-  const userOrders = await Order.find({
-    user: id,
-  });
-
   let promises = [];
-
-  for (let i = 0; i < userOrders.length; i++) {
-    promises.push(userOrders[i].delete());
-  }
 
   promises.push(user.delete());
   await Promise.all(promises);
@@ -376,7 +301,7 @@ exports.getSingleUser = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
+exports.logout = catchAsyncErrors(async (req, res) => {
   const { authorization } = req.cookies;
 
   await DeviceSession.deleteOne({
@@ -392,9 +317,9 @@ exports.logout = async (req, res) => {
     success: true,
     message: MESSAGES.LOGOUT_SUCCESS,
   });
-};
+});
 
-exports.forgotPassword = async (req, res, next) => {
+exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const { email, role } = req.body;
 
   const Model = UserModelFactory(role);
@@ -406,4 +331,4 @@ exports.forgotPassword = async (req, res, next) => {
   if (user) {
     const code = generatePasscode(6);
   }
-};
+});

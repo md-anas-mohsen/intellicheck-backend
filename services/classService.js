@@ -12,141 +12,127 @@ const Announcement = require("../models/announcement");
 const ClassRegistration = require("../models/classRegistration");
 const StudentRegistrationRequest = require("../models/studentRegistrationRequest");
 
+const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const sendEmail = require("../utils/sendEmail");
+const ErrorHandler = require("../utils/errorHandler");
 
-exports.createClass = async (req, res) => {
+exports.createClass = catchAsyncErrors(async (req, res, next) => {
   const { className, classDescription } = req.body;
   const { courseCode } = req.params;
   const teacherId = req.user._id;
 
-  try {
-    const user = await Teacher.findOne({ _id: teacherId });
+  const user = await Teacher.findOne({ _id: teacherId });
 
-    if (!user) {
-      return res.status(404).json({
-        success: true,
-        message: MESSAGES.USER_NOT_FOUND,
-      });
-    }
-
-    const verifyCourse = await Course.findOne({
-      courseCode: courseCode,
-    });
-
-    if (!verifyCourse) {
-      return res.status(404).json({
-        success: true,
-        message: MESSAGES.COURSE_NOT_FOUND,
-      });
-    }
-
-    const existingCourseName = await Class.findOne({ className: className });
-
-    if (existingCourseName) {
-      return res.status(409).json({
-        success: false,
-        message: "Class Name not available",
-      });
-    }
-
-    const newClass = await Class.create({
-      courseCode,
-      teacherId,
-      classDescription,
-      className,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: MESSAGES.CLASS_CREATION_SUCCESS,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: MESSAGES.SERVER_ERROR,
-    });
+  if (!user) {
+    return next(new ErrorHandler(MESSAGES.USER_NOT_FOUND, 404));
   }
-};
 
-exports.postAnnouncement = async (req, res) => {
+  const verifyCourse = await Course.findOne({
+    courseCode,
+  });
+
+  if (!verifyCourse) {
+    return next(new ErrorHandler(MESSAGES.COURSE_NOT_FOUND, 404));
+  }
+
+  const existingCourseName = await Class.findOne({ className: className });
+
+  if (existingCourseName) {
+    return next(new ErrorHandler("Class Name not available", 409));
+  }
+
+  const newClass = await Class.create({
+    courseCode,
+    teacherId,
+    classDescription,
+    className,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.CLASS_CREATION_SUCCESS,
+    class: newClass,
+  });
+});
+
+exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
   const { date, title, description } = req.body;
   const { classCode } = req.params;
   const teacherId = req.user._id;
 
-  try {
-    const teacherHasClass = await Class.findOne({
-      teacherId: teacherId,
-      _id: classId,
-    });
+  const teacherHasClass = await Class.findOne({
+    teacherId: teacherId,
+    _id: classId,
+  });
 
-    if (!teacherHasClass) {
-      return res.status(403).json({
-        success: false,
-        message: MESSAGES.TEACHER_CLASS_NOT_FOUND,
-      });
-    }
-
-    const existingTitle = await Announcement.findOne({ title: title });
-
-    if (existingTitle) {
-      return res.status(409).json({
-        success: false,
-        message: "Title not available",
-      });
-    }
-
-    const newAnnouncement = await Announcement.create({
-      classCode,
-      date,
-      description,
-      title,
-    });
-
-    const announcement = await Announcement.find({ classCode: classCode });
-
-    return res.status(200).json({
-      success: true,
-      message: MESSAGES.ANNOUNCEMENT_CREATION_SUCCESS,
-      announcement,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: MESSAGES.SERVER_ERROR,
-    });
+  if (!teacherHasClass) {
+    return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
   }
-};
+
+  const existingTitle = await Announcement.findOne({ title: title });
+
+  if (existingTitle) {
+    return next("Title not available", 409);
+  }
+
+  const newAnnouncement = await Announcement.create({
+    classCode,
+    date,
+    description,
+    title,
+  });
+
+  const announcement = await Announcement.find({ classCode: classCode });
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.ANNOUNCEMENT_CREATION_SUCCESS,
+    announcement,
+  });
+});
+
+exports.updateClass = catchAsyncErrors(async (req, res) => {
+  const classId = req.params.classId;
+  const { className, classDescription } = req.body;
+
+  let classExists = await Class.findById(classId);
+
+  if (!classExists) {
+    return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
+  }
+
+  classExists = await Class.findByIdAndUpdate(
+    classId,
+    {
+      ...(!!className && { className }),
+      ...(!!classDescription && { classDescription }),
+    },
+    {
+      new: true,
+    }
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.CLASS_UPDATED,
+    class: classExists,
+  });
+});
 
 const addStudentToClass = async (classToRegisterIn, email, multiple) => {
   let studentExists;
 
-  try {
-    studentExists = await Student.findOne({
-      email,
-    });
+  studentExists = await Student.findOne({
+    email,
+  });
 
-    const studentAlreadyRegistered = await ClassRegistration.findOne({
-      email,
-      classId: classToRegisterIn._id,
-    });
+  const studentAlreadyRegistered = await ClassRegistration.findOne({
+    email,
+    classId: classToRegisterIn._id,
+  });
 
-    if (!!studentAlreadyRegistered) {
-      return res.status(409).json({
-        success: false,
-        message: MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS,
-      });
-    }
-  } catch (err) {
-    if (!multiple) {
-      console.log(error);
-      return res.status(500).json({
-        success: false,
-        error,
-        message: MESSAGES.SERVER_ERROR,
-      });
-    }
+  if (!!studentAlreadyRegistered && !multiple) {
+    return next(new ErrorHandler(MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS));
   }
 
   if (!!studentExists) {
@@ -198,90 +184,66 @@ const addStudentToClass = async (classToRegisterIn, email, multiple) => {
   }
 };
 
-exports.addSingleStudentToClass = async (req, res) => {
+exports.addSingleStudentToClass = catchAsyncErrors(async (req, res, next) => {
   const classId = req.params.classId;
   const { email } = req.body;
 
   let classExists;
 
-  try {
-    classExists = await Class.findById(classId);
+  classExists = await Class.findById(classId);
 
-    const studentAlreadyRegistered = await ClassRegistration.findOne({
-      email,
-      classId: classToRegisterIn._id,
-    });
-
-    if (!!studentAlreadyRegistered) {
-      return res.status(409).json({
-        success: false,
-        message: MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS,
-      });
-    }
-
-    if (!classExists) {
-      return res.status(404).json({
-        success: false,
-        message: MESSAGES.CLASS_NOT_FOUND,
-      });
-    }
-
-    await addStudentToClass(classExists, email, false);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error,
-      message: MESSAGES.SERVER_ERROR,
-    });
-  }
-};
-
-exports.addMultipleStudentsToClass = async (req, res) => {
-  const { classId } = req.params;
-  const busboy = Busboy({ headers: req.headers });
-
-  const classExists = await Class.findById(classId);
-
-  if (!classExists) {
-    return res.status(404).json({
-      success: false,
-      message: MESSAGES.CLASS_NOT_FOUND,
-    });
-  }
-
-  const options = {
-    objectMode: true,
-    quote: null,
-    headers: true,
-    renameHeaders: false,
-  };
-
-  let studentRegistrationPromises = [];
-  let studentEmails = [];
-  let incompleteData = false;
-
-  busboy.on("file", (fieldName, file, fileName, encoding, mimeType) => {
-    file.pipe(csv.parse(options)).on("data", (data) => {
-      console.log(data);
-      if (!data["email"]) {
-        console.log("no email");
-        incompleteData = true;
-        return;
-      } else {
-        studentEmails.push(data["email"]);
-      }
-    });
+  const studentAlreadyRegistered = await ClassRegistration.findOne({
+    email,
+    classId: classToRegisterIn._id,
   });
 
-  busboy.on("finish", async () => {
-    try {
-      console.log("INCOMPLETE DATA ", incompleteData);
+  if (!!studentAlreadyRegistered) {
+    return next(new ErrorHandler(MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS, 409));
+  }
+
+  if (!classExists) {
+    return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
+  }
+
+  await addStudentToClass(classExists, email, false);
+});
+
+exports.addMultipleStudentsToClass = catchAsyncErrors(
+  async (req, res, next) => {
+    const { classId } = req.params;
+    const busboy = Busboy({ headers: req.headers });
+
+    const classExists = await Class.findById(classId);
+
+    if (!classExists) {
+      return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
+    }
+
+    const options = {
+      objectMode: true,
+      quote: null,
+      headers: true,
+      renameHeaders: false,
+    };
+
+    let studentRegistrationPromises = [];
+    let studentEmails = [];
+    let incompleteData = false;
+
+    busboy.on("file", (fieldName, file, fileName, encoding, mimeType) => {
+      file.pipe(csv.parse(options)).on("data", (data) => {
+        if (!data["email"]) {
+          incompleteData = true;
+          return;
+        } else {
+          studentEmails.push(data["email"]);
+        }
+      });
+    });
+
+    busboy.on("finish", async () => {
       if (incompleteData) {
-        return res.status(400).json({
-          success: false,
-          message: MESSAGES.EMAIL_MISSING_IN_CSV_ROW,
-        });
+        return next(new ErrorHandler(MESSAGES.EMAIL_MISSING_IN_CSV_ROW, 400));
       }
 
       studentEmails.forEach((email) =>
@@ -290,20 +252,13 @@ exports.addMultipleStudentsToClass = async (req, res) => {
         )
       );
       await Promise.all(studentRegistrationPromises);
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        success: false,
-        error,
-        message: MESSAGES.SERVER_ERROR,
+
+      return res.status(201).json({
+        success: true,
+        message: "Successfully processed request",
       });
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: "Successfully processed request",
     });
-  });
 
-  req.pipe(busboy);
-};
+    req.pipe(busboy);
+  }
+);

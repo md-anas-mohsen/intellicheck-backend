@@ -9,9 +9,16 @@ const validator = new SchemaValidator();
 
 router.post(
   "/create-class",
-  isAuthenticatedUser(),
+  isAuthenticatedUser(USER_ROLE.TEACHER),
   validator.body(classValidatorSchema.createClassRequestModel),
   classService.createClass
+);
+
+router.patch(
+  "/update-class/:classId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  validator.body(classValidatorSchema.updateClassRequestModel),
+  classService.updateClass
 );
 
 router.post(

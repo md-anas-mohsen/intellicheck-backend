@@ -9,7 +9,10 @@ const classValidatorSchema = {
     classDescription: Joi.string().max(100).required(),
     className: Joi.string().max(25).required(),
   }),
-
+  updateClassRequestModel: Joi.object({
+    className: Joi.string().max(25).optional(),
+    classDescription: Joi.string().max(100).optional(),
+  }),
   addSingleStudentToClassRequestModel: Joi.object({
     email: Joi.string().email().required(),
   }),
