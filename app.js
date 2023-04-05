@@ -7,6 +7,8 @@ const logger = require("./middlewares/logReqRes");
 const users = require("./routes/user");
 const classes = require("./routes/class");
 
+const errorMiddleware = require("./middlewares/errors");
+
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 
 app.use(express.json());
@@ -39,6 +41,8 @@ app.get("/", (req, res) => {
     message: "API - Boilerplate",
   });
 });
+
+app.use(errorMiddleware);
 
 app.use((req, res, next) => {
   res.status(404).json({ success: false, message: "Not Found" });

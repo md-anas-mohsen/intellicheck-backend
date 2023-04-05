@@ -55,12 +55,6 @@ router.post(
 router.delete("/logout", userService.logout);
 
 router.post(
-  "/refresh-token",
-  validator.body(userValidatorSchema.refreshUserTokenRequestModel),
-  userService.refreshToken
-);
-
-router.post(
   "/",
   isAuthenticatedUser("admin"),
   validator.body(userValidatorSchema.createUserRequestModel),
