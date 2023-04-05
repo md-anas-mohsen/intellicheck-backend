@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const MESSAGES = require("../constants/messages");
 const { USER_ROLE } = require("../constants/user");
 const DeviceSession = require("../models/deviceSession");
+const { UserModelFactory } = require("../services/userService");
 
 exports.isAuthenticatedUser = (roles) => {
   return async (req, res, next) => {
@@ -51,10 +52,14 @@ exports.isAuthenticatedUser = (roles) => {
         });
       }
 
-      const user =
-        decoded.role === USER_ROLE.STUDENT
-          ? await Student.findById(decoded.id)
-          : decoded.role === USER_ROLE.TEACHER && Teacher.findById(decoded.id);
+      const Model = UserModelFactory(decoded.role);
+      const user = await Model.findById(decoded.id);
+
+      // const user =
+      //   decoded.role === USER_ROLE.STUDENT
+      //     ? await Student.findById(decoded.id)
+      //     : decoded.role === USER_ROLE.TEACHER &&
+      //       (await Teacher.findById(decoded.id));
 
       if (!user) {
         return res.status(404).json({

@@ -17,15 +17,8 @@ const sendEmail = require("../utils/sendEmail");
 const ErrorHandler = require("../utils/errorHandler");
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
-  const { className, classDescription } = req.body;
-  const { courseCode } = req.params;
+  const { className, courseCode, classDescription } = req.body;
   const teacherId = req.user._id;
-
-  const user = await Teacher.findOne({ _id: teacherId });
-
-  if (!user) {
-    return next(new ErrorHandler(MESSAGES.USER_NOT_FOUND, 404));
-  }
 
   const verifyCourse = await Course.findOne({
     courseCode,
@@ -57,7 +50,7 @@ exports.createClass = catchAsyncErrors(async (req, res, next) => {
 
 exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
   const { date, title, description } = req.body;
-  const { classCode } = req.params;
+  const { classId } = req.params;
   const teacherId = req.user._id;
 
   const teacherHasClass = await Class.findOne({
@@ -69,20 +62,17 @@ exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
   }
 
-  const existingTitle = await Announcement.findOne({ title: title });
+  // const existingTitle = await Announcement.findOne({ title: title });
 
-  if (existingTitle) {
-    return next("Title not available", 409);
-  }
+  // if (existingTitle) {
+  //   return next("Title not available", 409);
+  // }
 
-  const newAnnouncement = await Announcement.create({
-    classCode,
-    date,
+  const announcement = await Announcement.create({
+    classId,
     description,
     title,
   });
-
-  const announcement = await Announcement.find({ classCode: classCode });
 
   return res.status(200).json({
     success: true,
@@ -91,7 +81,7 @@ exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-exports.updateClass = catchAsyncErrors(async (req, res) => {
+exports.updateClass = catchAsyncErrors(async (req, res, next) => {
   const classId = req.params.classId;
   const { className, classDescription } = req.body;
 

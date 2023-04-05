@@ -30,7 +30,7 @@ const findTeacherOrStudent = async (role, whereParams) => {
   return user;
 };
 
-const UserModelFactory = (role) => {
+exports.UserModelFactory = (role) => {
   const Model =
     role === USER_ROLE.STUDENT
       ? Student
