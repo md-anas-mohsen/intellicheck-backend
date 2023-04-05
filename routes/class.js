@@ -22,8 +22,8 @@ router.patch(
 );
 
 router.post(
-  "/post-announcement",
-  isAuthenticatedUser(),
+  "/post-announcement/:classId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
   validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
   classService.postAnnouncement
 );

@@ -12,6 +12,10 @@ const studentRegistrationRequestSchema = mongoose.Schema({
     required: [true, "Please enter user email"],
     validate: [validator.isEmail, "Please enter valid email address"],
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 studentRegistrationRequestSchema.index(

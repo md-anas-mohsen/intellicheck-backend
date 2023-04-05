@@ -21,6 +21,10 @@ const classSchema = mongoose.Schema({
     required: [true, "Provide class name"],
     maxLength: [25, "Cannot exceed 25 characters"],
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 module.exports = mongoose.model("Class", classSchema);

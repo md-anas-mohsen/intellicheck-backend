@@ -12,6 +12,10 @@ const classRegistrationSchema = mongoose.Schema({
     required: [true, "Provide student Id"],
     ref: "Student",
   },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
 });
 
 classRegistrationSchema.index({ classId: 1, studentId: 1 }, { unique: true });
