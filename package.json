@@ -11,6 +11,7 @@
   "author": "Anas Mohsen",
   "license": "ISC",
   "dependencies": {
+    "@joi/date": "^2.1.0",
     "bcrypt": "^5.0.1",
     "busboy": "^1.6.0",
     "cloudinary": "^1.26.2",

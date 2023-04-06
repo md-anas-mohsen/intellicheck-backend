@@ -35,6 +35,10 @@ const MESSAGES = {
   EMAIL_MISSING_IN_CSV_ROW: "A row is missing an email in the CSV uploaded",
   STUDENT_ALREADY_ADDED_TO_CLASS: "Student is already added to class",
   CLASS_UPDATED: "Class updated successfully",
+  ASSESSMENT_WITH_SAME_NAME: "Assessment with same name already exists",
+  ASSESSMENT_DUE_DATE_BEHIND_OPEN_DATE:
+    "Assessment due date must be ahead of open date",
+  ASSESSMENT_CREATED: "Assessment has been created successfully",
 };
 
 module.exports = MESSAGES;

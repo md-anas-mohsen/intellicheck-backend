@@ -1,26 +1,12 @@
-class SchemaValidator {
-  // body(schema) {
-  //   return (req, res, next) => {
-  //     const { error, value } = schema.validate(req.body);
+const ErrorHandler = require("../utils/errorHandler");
 
-  //     if (error) {
-  //       return res.status(200).json({
-  //         success: false,
-  //         message: error.details[0]?.message,
-  //       });
-  //     }
-  //     next();
-  //   };
-  // },
+class SchemaValidator {
   _validate(schema, type) {
     return (req, res, next) => {
       const { error, value } = schema.validate(req[type]);
 
       if (error) {
-        return res.status(400).json({
-          success: false,
-          message: error.details[0]?.message,
-        });
+        return next(new ErrorHandler(error.details[0]?.message, 400));
       }
       next();
     };
