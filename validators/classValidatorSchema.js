@@ -1,5 +1,8 @@
 const Joi = require("joi");
-const { ORDER_BY_DIRECTIONS } = require("../constants/common");
+const {
+  ORDER_BY_DIRECTIONS,
+  PAGINATION_OPTIONS,
+} = require("../constants/common");
 const { USER_ROLE } = require("../constants/user");
 
 const classValidatorSchema = {
@@ -14,6 +17,9 @@ const classValidatorSchema = {
   }),
   addSingleStudentToClassRequestModel: Joi.object({
     email: Joi.string().email().required(),
+  }),
+  getClassStudentsRequestModel: Joi.object({
+    ...PAGINATION_OPTIONS,
   }),
 };
 

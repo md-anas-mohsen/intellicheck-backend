@@ -15,6 +15,7 @@ const StudentRegistrationRequest = require("../models/studentRegistrationRequest
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const sendEmail = require("../utils/sendEmail");
 const ErrorHandler = require("../utils/errorHandler");
+const { applyPagination } = require("../utils/generalHelpers");
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
   const { className, courseCode, classDescription } = req.body;
@@ -252,3 +253,70 @@ exports.addMultipleStudentsToClass = catchAsyncErrors(
     req.pipe(busboy);
   }
 );
+
+exports.getClassStudents = catchAsyncErrors(async (req, res, next) => {
+  const classId = req.params.classId;
+  const teacherId = req.user._id;
+  const { keyword } = req.query;
+
+  const teacherHasClass = await Class.findOne({
+    teacherId,
+    _id: classId,
+  });
+
+  if (!teacherHasClass) {
+    return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
+  }
+
+  let studentIds = (
+    await ClassRegistration.find(
+      {
+        classId,
+      },
+      "studentId"
+    )
+  ).map((registration) => registration.studentId);
+
+  const whereParams = {
+    _id: {
+      $in: studentIds,
+    },
+    ...(!!keyword && {
+      $or: [
+        {
+          firstName: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          lastName: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          username: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  const students = await applyPagination(Student.find(whereParams), req.query);
+  const count = await Student.count(whereParams);
+
+  return res.status(200).json({
+    success: true,
+    students,
+    count,
+  });
+});

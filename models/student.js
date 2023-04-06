@@ -92,7 +92,7 @@ studentSchema.methods.getJwtRefreshToken = function () {
 };
 
 studentSchema.statics.searchQuery = function (keyword, queryParams) {
-  const stringSearchFields = ["name", "email", "role"];
+  const stringSearchFields = ["firstName", "lastName", "email", "username"];
   const alphaNumericSearchFields = ["_id"];
 
   let query = {};
@@ -115,6 +115,16 @@ studentSchema.statics.searchQuery = function (keyword, queryParams) {
   if (!!queryParams && queryParams.exceptUserWithId) {
     query._id = {
       $ne: queryParams.exceptUserWithId,
+    };
+  }
+
+  if (
+    !!queryParams &&
+    queryParams.studentId &&
+    Array.isArray(queryParams.studentId)
+  ) {
+    query._id = {
+      $all: querParams.studentId,
     };
   }
 

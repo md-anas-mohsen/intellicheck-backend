@@ -41,4 +41,11 @@ router.post(
   classService.addMultipleStudentsToClass
 );
 
+router.get(
+  "/get-class-students/:classId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  validator.query(classValidatorSchema.getClassStudentsRequestModel),
+  classService.getClassStudents
+);
+
 module.exports = router;
