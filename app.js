@@ -8,6 +8,7 @@ const users = require("./routes/user");
 const classes = require("./routes/class");
 
 const errorMiddleware = require("./middlewares/errors");
+const logErrorMiddleware = require("./middlewares/logErrors");
 
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use(logErrorMiddleware);
 app.use(errorMiddleware);
 
 app.use((req, res, next) => {

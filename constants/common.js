@@ -1,4 +1,12 @@
+const Joi = require("joi");
+
 exports.ORDER_BY_DIRECTIONS = {
   ASC: "asc",
   DESC: "desc",
+};
+
+exports.PAGINATION_OPTIONS = {
+  keyword: Joi.string().allow("").trim().optional(),
+  page: Joi.number().empty("").default(1).optional(),
+  limit: Joi.number().empty("").default(20).max(500).optional(),
 };
