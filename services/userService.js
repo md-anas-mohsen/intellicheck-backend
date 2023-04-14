@@ -15,6 +15,11 @@ const ClassRegistration = require("../models/classRegistration");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
+const Token = require("../models/token");
+const { TOKEN_TYPE, PASSCODE_LENGTH } = require("../constants/token");
+const sendEmail = require("../utils/sendEmail");
+
+const crypto = require("crypto");
 
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
@@ -322,13 +327,143 @@ exports.logout = catchAsyncErrors(async (req, res) => {
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   const { email, role } = req.body;
 
-  const Model = UserModelFactory(role);
+  const Model = this.UserModelFactory(role);
 
   const user = await Model.findOne({
     email,
   });
 
-  if (user) {
-    const code = generatePasscode(6);
+  if (!user) {
+    return next(new ErrorHandler(MESSAGES.USER_NOT_FOUND, 404));
   }
+
+  const code = generatePasscode(PASSCODE_LENGTH);
+  let tokenHash = crypto.randomBytes(16).toString("hex");
+  tokenHash = crypto.createHash("sha256").update(tokenHash).digest("hex");
+
+  const [token] = await Promise.all([
+    Token.findOneAndUpdate(
+      {
+        userId: user.id,
+        tokenType: TOKEN_TYPE.FORGOT_PASSWORD,
+        userType: role,
+      },
+      {
+        userId: user.id,
+        passcode: code,
+        tokenType: TOKEN_TYPE.FORGOT_PASSWORD,
+        userType: role,
+        tokenHash,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+        retriesLeft: 3,
+      },
+      { upsert: true, new: true }
+    ),
+    Token.findOneAndDelete({
+      userId: user.id,
+      tokenType: TOKEN_TYPE.RESET_PASSWORD,
+      userType: role,
+    }),
+  ]);
+
+  sendEmail({
+    email,
+    subject: `RapidCheck | OTP`,
+    message: `<p>Here is your OTP</p> <h1>${code}</h1>`,
+  });
+
+  return res.status(200).json({
+    token: token.tokenHash,
+  });
+});
+
+exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
+  const { token, code } = req.body;
+
+  const tokenRecord = await Token.findOne({
+    tokenHash: token,
+  });
+
+  if (!tokenRecord) {
+    return next(new ErrorHandler(MESSAGES.INVALID_TOKEN, 404));
+  }
+
+  if (Date.now() >= new Date(tokenRecord.expiresAt).getTime()) {
+    // await Token.findByIdAndDelete(tokenRecord._id);
+    console.log(Date.now());
+    console.log(new Date(tokenRecord.expiresAt).getTime());
+    return next(new ErrorHandler(MESSAGES.INVALID_TOKEN, 404));
+  }
+
+  let retriesLeft = tokenRecord.retriesLeft;
+
+  if (tokenRecord.passcode !== code) {
+    retriesLeft -= 1;
+
+    if (retriesLeft <= 0) {
+      await Token.findByIdAndDelete(tokenRecord._id);
+    } else {
+      tokenRecord.retriesLeft = retriesLeft;
+      await tokenRecord.save();
+    }
+
+    return next(new ErrorHandler(MESSAGES.INVALID_OTP, 403));
+  }
+
+  let tokenHash = crypto.randomBytes(16).toString("hex");
+  tokenHash = crypto.createHash("sha256").update(tokenHash).digest("hex");
+
+  const resetPasswordToken = await Token.findOneAndUpdate(
+    {
+      userId: tokenRecord.userId,
+      tokenType: TOKEN_TYPE.RESET_PASSWORD,
+      userType: tokenRecord.userType,
+    },
+    {
+      userId: tokenRecord.userId,
+      tokenType: TOKEN_TYPE.RESET_PASSWORD,
+      userType: tokenRecord.userType,
+      tokenHash,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      retriesLeft: 3,
+    },
+    { upsert: true, new: true }
+  );
+
+  await Token.findByIdAndDelete(tokenRecord._id);
+
+  return res.status(200).json({
+    token: resetPasswordToken.tokenHash,
+  });
+});
+
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  const { token, newPassword, confirmNewPassword } = req.body;
+
+  const resetPasswordToken = await Token.findOne({
+    tokenHash: token,
+  });
+
+  if (!resetPasswordToken) {
+    return next(new ErrorHandler(MESSAGES.INVALID_TOKEN, 404));
+  }
+
+  const Model = this.UserModelFactory(resetPasswordToken.userType);
+  const user = await Model.findById(resetPasswordToken.userId);
+
+  if (newPassword !== confirmNewPassword) {
+    return next(new ErrorHandler(MESSAGES.PASSWORDS_DONOT_MATCH, 400));
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  await Token.deleteMany({
+    userId: user._id,
+    userType: resetPasswordToken.userType,
+  });
+
+  return res.status(200).json({
+    message: MESSAGES.PASSWORD_RESET_SUCCESSFUL,
+  });
 });

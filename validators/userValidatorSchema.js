@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { ORDER_BY_DIRECTIONS } = require("../constants/common");
 const { USER_ROLE } = require("../constants/user");
+const { PASSCODE_LENGTH } = require("../constants/token");
 
 const userValidatorSchema = {
   registerUserRequestModel: Joi.object({
@@ -50,8 +51,9 @@ const userValidatorSchema = {
       .messages({ "any.only": "{{#label}} does not match" }),
   }),
   verifyOTPRequestModel: Joi.object({
+    token: Joi.string().required(),
     code: Joi.string()
-      .length(10)
+      .length(PASSCODE_LENGTH)
       .pattern(/^[0-9]+$/)
       .required(),
   }),

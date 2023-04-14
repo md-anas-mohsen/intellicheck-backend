@@ -1,3 +1,5 @@
+const { PASSCODE_LENGTH } = require("../constants/token");
+
 exports.applyPagination = (dbQuery, queryString) => {
   let { page, limit } = queryString;
 
@@ -23,7 +25,7 @@ exports.capitalizeEachWord = (sentence) => {
 };
 
 exports.generatePasscode = (digits = 6) => {
-  console.log(
-    Math.floor(10 ** digits - 1 + Math.random() * 9 * 10 ** digits - 1)
-  );
+  return process.env.ENVIRONMENT === "DEVELOPMENT"
+    ? "0".repeat(PASSCODE_LENGTH)
+    : `${Math.floor(10 ** digits - 1 + Math.random() * 9 * 10 ** digits - 1)}`;
 };

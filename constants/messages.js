@@ -39,6 +39,10 @@ const MESSAGES = {
   ASSESSMENT_DUE_DATE_BEHIND_OPEN_DATE:
     "Assessment due date must be ahead of open date",
   ASSESSMENT_CREATED: "Assessment has been created successfully",
+  INVALID_OTP: "Invalid OTP entered",
+  INVALID_TOKEN: "Request is invalid or expired",
+  PASSWORDS_DONOT_MATCH: "Passwords donot match",
+  PASSWORD_RESET_SUCCESSFUL: "Password has been reset successfully",
 };
 
 module.exports = MESSAGES;
