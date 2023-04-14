@@ -71,7 +71,19 @@ router.patch(
 router.post(
   "/forgot-password",
   validator.body(userValidatorSchema.forgotPasswordRequestModel),
-  userService.registerUser
+  userService.forgotPassword
+);
+
+router.post(
+  "/verify-otp",
+  validator.body(userValidatorSchema.verifyOTPRequestModel),
+  userService.verifyOTP
+);
+
+router.post(
+  "/reset-password",
+  validator.body(userValidatorSchema.resetPasswordRequestModel),
+  userService.resetPassword
 );
 
 module.exports = router;
