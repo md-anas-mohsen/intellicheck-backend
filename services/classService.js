@@ -16,6 +16,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const sendEmail = require("../utils/sendEmail");
 const ErrorHandler = require("../utils/errorHandler");
 const { applyPagination } = require("../utils/generalHelpers");
+const { readCSV2JSON } = require("../utils/fileHelper");
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
   const { className, courseCode, classDescription } = req.body;
@@ -117,10 +118,12 @@ const addStudentToClass = async (classToRegisterIn, email, multiple) => {
     email,
   });
 
-  const studentAlreadyRegistered = await ClassRegistration.findOne({
-    email,
-    classId: classToRegisterIn._id,
-  });
+  const studentAlreadyRegistered = !!studentExists
+    ? await ClassRegistration.findOne({
+        studentId: studentExists?._id,
+        classId: classToRegisterIn._id,
+      })
+    : null;
 
   if (!!studentAlreadyRegistered && !multiple) {
     return next(new ErrorHandler(MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS));
@@ -149,23 +152,25 @@ const addStudentToClass = async (classToRegisterIn, email, multiple) => {
     return;
   }
 
-  await StudentRegistrationRequest.findOneAndUpdate(
-    {
-      classId: classToRegisterIn._id,
-      email,
-    },
-    {
-      classId: classToRegisterIn._id,
-      email,
-    },
-    { upsert: true }
-  );
-
-  await sendEmail({
+  let studentRegistrationRequest = await StudentRegistrationRequest.findOne({
+    classId: classToRegisterIn._id,
     email,
-    subject: `Register for ${classToRegisterIn.className} on RapidCheck`,
-    message: `<p>Hello, please register, thsnsk</p>`,
   });
+
+  if (!studentRegistrationRequest) {
+    await StudentRegistrationRequest.create({
+      classId: classToRegisterIn._id,
+      email,
+    });
+  }
+
+  if (!studentRegistrationRequest) {
+    sendEmail({
+      email,
+      subject: `Register for ${classToRegisterIn.className} on RapidCheck`,
+      message: `<p>Hello, please register, thsnsk</p>`,
+    });
+  }
 
   if (!multiple) {
     return res.status(200).json({
@@ -210,47 +215,22 @@ exports.addMultipleStudentsToClass = catchAsyncErrors(
       return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
     }
 
-    const options = {
-      objectMode: true,
-      quote: null,
-      headers: true,
-      renameHeaders: false,
-    };
-
     let studentRegistrationPromises = [];
-    let studentEmails = [];
-    let incompleteData = false;
+    let studentEmails = (await readCSV2JSON(req, "students")).map(
+      (data) => data.email
+    );
 
-    busboy.on("file", (fieldName, file, fileName, encoding, mimeType) => {
-      file.pipe(csv.parse(options)).on("data", (data) => {
-        if (!data["email"]) {
-          incompleteData = true;
-          return;
-        } else {
-          studentEmails.push(data["email"]);
-        }
-      });
+    studentEmails.forEach((email) =>
+      studentRegistrationPromises.push(
+        addStudentToClass(classExists, email, true)
+      )
+    );
+    await Promise.all(studentRegistrationPromises);
+
+    return res.status(201).json({
+      success: true,
+      message: "Successfully processed request",
     });
-
-    busboy.on("finish", async () => {
-      if (incompleteData) {
-        return next(new ErrorHandler(MESSAGES.EMAIL_MISSING_IN_CSV_ROW, 400));
-      }
-
-      studentEmails.forEach((email) =>
-        studentRegistrationPromises.push(
-          addStudentToClass(classExists, email, true)
-        )
-      );
-      await Promise.all(studentRegistrationPromises);
-
-      return res.status(201).json({
-        success: true,
-        message: "Successfully processed request",
-      });
-    });
-
-    req.pipe(busboy);
   }
 );
 
