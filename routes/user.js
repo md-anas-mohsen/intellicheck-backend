@@ -86,4 +86,11 @@ router.post(
   userService.resetPassword
 );
 
+router.put(
+  "/change-password",
+  isAuthenticatedUser(),
+  validator.body(userValidatorSchema.changePasswordRequestModel),
+  userService.changePassword
+);
+
 module.exports = router;

@@ -467,3 +467,27 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     message: MESSAGES.PASSWORD_RESET_SUCCESSFUL,
   });
 });
+
+exports.changePassword = catchAsyncErrors(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const UserModel = this.UserModelFactory(req.user?.role);
+
+  const user = await findTeacherOrStudent(req.user?.role, {
+    _id: req.user?._id,
+  });
+
+  const passwordIsCorrect = await user.comparePassword(currentPassword);
+
+  if (!passwordIsCorrect) {
+    return next(new ErrorHandler(MESSAGES.INCORRECT_PASSWORD, 403));
+  }
+
+  user.password = newPassword;
+
+  await user.save();
+
+  return res.status(200).json({
+    message: "Password changed successfully",
+  });
+});

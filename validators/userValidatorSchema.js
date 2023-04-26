@@ -57,6 +57,16 @@ const userValidatorSchema = {
       .pattern(/^[0-9]+$/)
       .required(),
   }),
+  changePasswordRequestModel: Joi.object({
+    currentPassword: Joi.string().min(6).required(),
+    newPassword: Joi.string().min(6).required(),
+    confirmNewPassword: Joi.string()
+      .min(6)
+      .valid(Joi.ref("newPassword"))
+      .required()
+      .label("Confirm new password")
+      .messages({ "any.only": "{{#label}} does not match" }),
+  }),
 };
 
 module.exports = userValidatorSchema;
