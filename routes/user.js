@@ -25,28 +25,6 @@ router.post(
   userService.registerUser
 );
 
-// Class Routes
-// router.post(
-//   "/create-class",
-//   isAuthenticatedUser(),
-//   validator.body(classValidatorSchema.createClassRequestModel),
-//   classService.createClass
-// );
-
-// router.post(
-//   "/post-announcement",
-//   isAuthenticatedUser(),
-//   validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
-//   classService.postAnnouncement
-// );
-
-//router.post(
-// "/join-class",
-//isAuthenticatedUser(),
-//validator.body(announcementValidatorSchema.postAnnouncementRequestModel),
-//classService.postAnnouncement
-//);
-
 router.post(
   "/login",
   validator.body(userValidatorSchema.loginUserRequestModel),
@@ -59,6 +37,20 @@ router.post(
   isAuthenticatedUser("admin"),
   validator.body(userValidatorSchema.createUserRequestModel),
   userService.createUser
+);
+
+router.patch(
+  "/update-profile",
+  isAuthenticatedUser(),
+  validator.body(userValidatorSchema.updateUserProfileRequestModel),
+  userService.updateProfile
+);
+
+router.patch(
+  "/update-settings",
+  isAuthenticatedUser(),
+  validator.body(userValidatorSchema.updateUserSettingsRequestModel),
+  userService.updateSettings
 );
 
 router.patch(
