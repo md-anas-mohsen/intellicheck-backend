@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { boolean } = require("joi");
 const { ORDER_BY_DIRECTIONS } = require("../constants/common");
-const { USER_ROLE } = require("../constants/user");
+const { USER_ROLE, userSettingsSchema } = require("../constants/user");
 
 const teacherSchema = mongoose.Schema({
   firstName: {
@@ -34,6 +34,7 @@ const teacherSchema = mongoose.Schema({
     minlength: [6, "Password must be longer than 6 characters"],
     select: false,
   },
+  settings: userSettingsSchema,
   createdAt: {
     type: Date,
     default: Date.now(),

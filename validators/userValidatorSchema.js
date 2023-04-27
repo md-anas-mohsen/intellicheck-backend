@@ -67,6 +67,16 @@ const userValidatorSchema = {
       .label("Confirm new password")
       .messages({ "any.only": "{{#label}} does not match" }),
   }),
+  updateUserProfileRequestModel: Joi.object({
+    firstName: Joi.string().max(25).optional(),
+    lastName: Joi.string().max(25).optional(),
+    username: Joi.string().max(10).optional(),
+    email: Joi.string().email().optional(),
+  }),
+  updateUserSettingsRequestModel: Joi.object({
+    notificationsOn: Joi.boolean().optional(),
+    emailsOn: Joi.boolean().optional(),
+  }),
 };
 
 module.exports = userValidatorSchema;

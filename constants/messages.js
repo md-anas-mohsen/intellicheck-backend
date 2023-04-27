@@ -3,7 +3,7 @@ const MESSAGES = {
   INVALID_AUTH_TOKEN: "Invalid auth token",
   INVALID_REFRESH_TOKEN: "Invalid refresh token",
   INSUFFICIENT_PRIVILEGE: "Insufficient privilege",
-  EMAIL_ALREADY_REGISTERED: "This email is already registered",
+  EMAIL_ALREADY_REGISTERED: "This email is already registered by another user",
   INCORRECT_PASSWORD: "Incorrect password",
   LOGIN_SUCCESS: "Logged in successfully",
   REGISTRATION_SUCCESS: "User has been registered successfully",
@@ -43,6 +43,9 @@ const MESSAGES = {
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",
   PASSWORD_RESET_SUCCESSFUL: "Password has been reset successfully",
+  PROFILE_UPDATED: "Profile updated successfully",
+  USERNAME_ALREADY_TAKEN: "Username has been already used",
+  SETTINGS_UPDATED: "Settings updated successfully",
 };
 
 module.exports = MESSAGES;

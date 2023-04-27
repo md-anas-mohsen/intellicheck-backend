@@ -491,3 +491,74 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
     message: "Password changed successfully",
   });
 });
+
+exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
+  const UserModel = this.UserModelFactory(req.user?.role);
+
+  const { firstName, lastName, username, email } = req.body;
+
+  if (!!email) {
+    const duplicateEmailUser = await UserModel.findOne({
+      _id: { $ne: req.user?._id },
+      email,
+    });
+
+    if (duplicateEmailUser) {
+      return next(new ErrorHandler(MESSAGES.EMAIL_ALREADY_REGISTERED, 409));
+    }
+  }
+
+  if (!!username) {
+    const duplicateUsernameUser = await UserModel.findOne({
+      _id: { $ne: req.user?._id },
+      username,
+    });
+
+    if (duplicateUsernameUser) {
+      return next(new ErrorHandler(MESSAGES.USERNAME_ALREADY_TAKEN, 409));
+    }
+  }
+
+  const user = await UserModel.findByIdAndUpdate(
+    req.user?._id,
+    {
+      ...(!!firstName && { firstName }),
+      ...(!!lastName && { lastName }),
+      ...(!!username && { username }),
+      ...(!!email && { email }),
+    },
+    { new: true }
+  );
+
+  return res.status(200).json({
+    user,
+    message: MESSAGES.PROFILE_UPDATED,
+  });
+});
+
+exports.updateSettings = catchAsyncErrors(async (req, res, next) => {
+  const { notificationsOn, emailsOn } = req.body;
+
+  const user = await findTeacherOrStudent(req.user?.role, {
+    id: req.user?._id,
+  });
+
+  if (!user.settings) {
+    user.settings = {};
+  }
+
+  if (notificationsOn !== undefined) {
+    user.settings.notificationsOn = notificationsOn;
+  }
+
+  if (emailsOn !== undefined) {
+    user.settings.emailsOn = emailsOn;
+  }
+
+  await user.save();
+
+  return res.status(200).json({
+    user,
+    message: MESSAGES.SETTINGS_UPDATED,
+  });
+});
