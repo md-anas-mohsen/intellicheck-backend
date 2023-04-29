@@ -39,6 +39,14 @@ const MESSAGES = {
   ASSESSMENT_DUE_DATE_BEHIND_OPEN_DATE:
     "Assessment due date must be ahead of open date",
   ASSESSMENT_CREATED: "Assessment has been created successfully",
+  ASSESSMENT_NOT_FOUND: "Assessment not found",
+  ASSESSMENT_NOT_ACCESSIBLE: "You cannot access this assessment",
+  ASSESSMENT_ALREADY_SUBMITTED: "Assessment already submitted",
+  ASSESSMENT_SUBMITTED_SUCCESS: "Assessment has been submitted successfully",
+  ASSESSMENT_OVERDUE: "You can no longer submit this assessment",
+  ASSESSMENT_GRADING_PROCESS: "Please until the grading process is complete",
+  ASSESSMENT_SUBMITTED_BY_ONE:
+    "This assessment cannot be modified, it has already been submitted by one or more users",
   INVALID_OTP: "Invalid OTP entered",
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",

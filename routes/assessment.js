@@ -13,4 +13,16 @@ router.post(
   assessmentService.createAssessment
 );
 
+router.get(
+  "/view-assessment/:assessmentId",
+  isAuthenticatedUser(),
+  assessmentService.viewAssessment
+);
+
+router.post(
+  "/submit-assessment/:assessmentId",
+  isAuthenticatedUser(USER_ROLE.STUDENT),
+  assessmentService.submitAssessment
+);
+
 module.exports = router;
