@@ -20,12 +20,18 @@ const questionSchema = mongoose.Schema({
   totalMarks: {
     type: Number,
     required: [true, "Provide marks for question"],
+    min: [1, "Minimum marks for a question is 1"],
+    max: [2, "Maximum marks for a question are 2"],
   },
   msAnswer: [
     {
       type: String,
       required: [true, "Please provide marking scheme answers"],
     },
+  ],
+  options: [
+    //for MCQs
+    { type: String, required: false },
   ],
 });
 

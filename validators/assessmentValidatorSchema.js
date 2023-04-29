@@ -17,10 +17,25 @@ const assessmentValidatorSchema = {
           .trim()
           .valid(...Object.values(questionType))
           .required(),
-        totalMarks: Joi.number().required(),
+        totalMarks: Joi.number()
+          .label("Question marks")
+          .min(1)
+          .max(2)
+          .required(),
         msAnswer: Joi.array().items(Joi.string()),
       })
     ),
+  }),
+  submitAssessmentRequestModel: Joi.object({
+    answers: Joi.array()
+      .items(
+        Joi.object().keys({
+          questionId: Joi.string().required(),
+          answer: Joi.string().required(),
+        })
+      )
+      .required(),
+    durationInSeconds: Joi.number().optional(),
   }),
 };
 

@@ -111,7 +111,12 @@ exports.updateClass = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-const addStudentToClass = async (classToRegisterIn, email, multiple) => {
+const addStudentToClass = async (
+  classToRegisterIn,
+  email,
+  multiple,
+  { res, next }
+) => {
   let studentExists;
 
   studentExists = await Student.findOne({
@@ -165,7 +170,7 @@ const addStudentToClass = async (classToRegisterIn, email, multiple) => {
   }
 
   if (!studentRegistrationRequest) {
-    sendEmail({
+    await sendEmail({
       email,
       subject: `Register for ${classToRegisterIn.className} on RapidCheck`,
       message: `<p>Hello, please register, thsnsk</p>`,
@@ -188,20 +193,20 @@ exports.addSingleStudentToClass = catchAsyncErrors(async (req, res, next) => {
 
   classExists = await Class.findById(classId);
 
-  const studentAlreadyRegistered = await ClassRegistration.findOne({
-    email,
-    classId: classToRegisterIn._id,
-  });
+  // const studentAlreadyRegistered = await ClassRegistration.findOne({
+  //   email,
+  //   classId: classExists._id,
+  // });
 
-  if (!!studentAlreadyRegistered) {
-    return next(new ErrorHandler(MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS, 409));
-  }
+  // if (!!studentAlreadyRegistered) {
+  //   return next(new ErrorHandler(MESSAGES.STUDENT_ALREADY_ADDED_TO_CLASS, 409));
+  // }
 
   if (!classExists) {
     return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
   }
 
-  await addStudentToClass(classExists, email, false);
+  await addStudentToClass(classExists, email, false, { res, next });
 });
 
 exports.addMultipleStudentsToClass = catchAsyncErrors(
@@ -222,7 +227,7 @@ exports.addMultipleStudentsToClass = catchAsyncErrors(
 
     studentEmails.forEach((email) =>
       studentRegistrationPromises.push(
-        addStudentToClass(classExists, email, true)
+        addStudentToClass(classExists, email, true, { res, next })
       )
     );
     await Promise.all(studentRegistrationPromises);
