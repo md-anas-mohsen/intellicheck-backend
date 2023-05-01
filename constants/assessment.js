@@ -5,7 +5,13 @@ exports.questionType = {
 };
 
 exports.assessmentSolutionStatus = {
-  SUBMITTED: "SUBMITTED",
+  UNGRADED: "UNGRADED",
   GRADED: "GRADED",
   REGRADE_REQUEST: "REGRADE_REQUEST",
+};
+
+exports.assessmentStatus = {
+  AVAILABLE: "AVAILABLE",
+  ACTIVE: "ACTIVE",
+  CANCELLED: "CANCELLED",
 };

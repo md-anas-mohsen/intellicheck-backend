@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { assessmentStatus } = require("../constants/assessment");
 
 const assessmentSchema = mongoose.Schema({
   classId: {
@@ -30,6 +31,14 @@ const assessmentSchema = mongoose.Schema({
   totalMarks: {
     type: Number,
     required: [true, "Provide total marks of assessment"],
+  },
+  cancelled: {
+    type: Boolean,
+    default: false,
+  },
+  allowManualGrading: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,

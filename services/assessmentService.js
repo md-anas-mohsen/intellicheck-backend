@@ -119,7 +119,7 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
 
     if (
       assessmentSolution &&
-      assessmentSolution.status === assessmentSolutionStatus.SUBMITTED
+      assessmentSolution.status === assessmentSolutionStatus.UNGRADED
     ) {
       return next(new ErrorHandler(MESSAGES.ASSESSMENT_GRADING_PROCESS, 403));
     }

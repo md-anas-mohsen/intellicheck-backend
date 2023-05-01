@@ -45,7 +45,7 @@ const assessmentSolutionSchema = mongoose.Schema({
     type: String,
     enum: Object.values(assessmentSolutionStatus),
     required: true,
-    default: assessmentSolutionStatus.SUBMITTED,
+    default: assessmentSolutionStatus.UNGRADED,
   },
   lateSubmission: {
     type: Boolean,
