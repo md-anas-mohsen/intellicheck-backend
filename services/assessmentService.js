@@ -239,3 +239,45 @@ exports.updateAssessment = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.ASSESSMENT_SUBMITTED_BY_ONE, 403));
   }
 });
+
+exports.deleteAssessment = catchAsyncErrors(async (req, res, next) => {
+
+  const { assessmentId } = req.params;
+
+  const assessment = await Assessment.findById(assessmentId);
+
+  if (!assessment) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_NOT_FOUND, 404));
+  }
+
+  const classBelongsToTeacher = await Class.findOne({
+    teacherId: req.user?._id,
+    _id: assessment.classId,
+  });
+
+  if (!classBelongsToTeacher) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_NOT_ACCESSIBLE, 403));
+  }
+
+  const assessmentIsSolved = await AssessmentSolution.find({
+    assessmentId,
+  });
+
+  if (assessmentIsSolved?.length) {
+    await AssessmentSolution.deleteMany({ 
+      assessmentId: { assessmentId } 
+    });
+  }
+
+  await Assessment.deleteOne({
+    _id: assessmentId,
+
+  });
+
+  // Paginated list of assessments returned
+  
+  return res.status(200).json({
+    message: MESSAGES.ASSESSMENT_DELETED,
+  });
+
+});

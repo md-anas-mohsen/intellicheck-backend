@@ -25,4 +25,10 @@ router.post(
   assessmentService.submitAssessment
 );
 
+router.delete(
+  "/delete-assessment/:assessmentId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  assessmentService.deleteAssessment
+);
+
 module.exports = router;
