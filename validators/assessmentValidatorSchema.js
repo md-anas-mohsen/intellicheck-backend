@@ -1,6 +1,9 @@
 const Joi = require("joi").extend(require("@joi/date"));
 const { questionType } = require("../constants/assessment");
-const { ORDER_BY_DIRECTIONS } = require("../constants/common");
+const {
+  ORDER_BY_DIRECTIONS,
+  MONGODB_OBJECT_ID_REGEX,
+} = require("../constants/common");
 const { USER_ROLE } = require("../constants/user");
 
 const assessmentValidatorSchema = {
@@ -18,13 +21,14 @@ const assessmentValidatorSchema = {
           .valid(...Object.values(questionType))
           .required(),
         totalMarks: Joi.number()
-          .label("Question marks")
+          .label("Marks for a question")
           .min(1)
           .max(2)
           .required(),
         msAnswer: Joi.array().items(Joi.string()),
       })
     ),
+    allowManualGrading: Joi.boolean().optional(),
   }),
   submitAssessmentRequestModel: Joi.object({
     answers: Joi.array()
@@ -36,6 +40,44 @@ const assessmentValidatorSchema = {
       )
       .required(),
     durationInSeconds: Joi.number().optional(),
+  }),
+  updateAssessmentRequestModel: Joi.object({
+    assessmentName: Joi.string().max(50).optional(),
+    description: Joi.string().max(150).optional(),
+    openDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc().optional(),
+    dueDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc().optional(),
+    duration: Joi.number().optional(),
+    questions: Joi.array()
+      .items(
+        Joi.object().keys({
+          _id: Joi.string().optional(),
+          question: Joi.string().required(),
+          questionType: Joi.string()
+            .label("Question type")
+            .trim()
+            .valid(...Object.values(questionType))
+            .required(),
+          totalMarks: Joi.number()
+            .label("Marks for a question")
+            .min(1)
+            .max(2)
+            .required(),
+          msAnswer: Joi.array().items(Joi.string()),
+        })
+      )
+      .optional(),
+    allowManualGrading: Joi.boolean().optional(),
+  }),
+  manuallyGradeAssessmentRequestModel: Joi.object({
+    marking: Joi.object()
+      .pattern(
+        MONGODB_OBJECT_ID_REGEX,
+        Joi.number().max(2).label("marks").required()
+      )
+      .required()
+      .messages({
+        "any.only": `Pass valid question id in key and marks in value for "marking"`,
+      }),
   }),
 };
 
