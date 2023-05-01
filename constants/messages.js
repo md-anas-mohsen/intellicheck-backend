@@ -34,7 +34,9 @@ const MESSAGES = {
     "Student will be added to this class once registered",
   EMAIL_MISSING_IN_CSV_ROW: "A row is missing an email in the CSV uploaded",
   STUDENT_ALREADY_ADDED_TO_CLASS: "Student is already added to class",
+  CLASS_DETAIL_FETCHED: "Class details fetched successfully",
   CLASS_UPDATED: "Class updated successfully",
+  STUDENT_REMOVED_FROM_CLASS: "Student removed from Class successfully",
   ASSESSMENT_WITH_SAME_NAME: "Assessment with same name already exists",
   ASSESSMENT_DUE_DATE_BEHIND_OPEN_DATE:
     "Assessment due date must be ahead of open date",
@@ -50,6 +52,7 @@ const MESSAGES = {
   ASSESSMENT_UPDATED: "Assessment has been updated successfully",
   ASSESSMENT_SOLUTION_NOT_FOUND: "Assessment solution not found",
   ASSESSMENT_QUESTION_NOT_GRADED: "One or more questions are not graded",
+  ASSESSMENT_DELETED: "Assessment deleted successfully",
   INVALID_OTP: "Invalid OTP entered",
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",

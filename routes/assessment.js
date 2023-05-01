@@ -39,4 +39,10 @@ router.post(
   assessmentService.manuallyGradeAssessment
 );
 
+router.delete(
+  "/delete-assessment/:assessmentId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  assessmentService.deleteAssessment
+);
+
 module.exports = router;
