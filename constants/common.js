@@ -10,3 +10,5 @@ exports.PAGINATION_OPTIONS = {
   page: Joi.number().empty("").default(1).optional(),
   limit: Joi.number().empty("").default(20).max(500).optional(),
 };
+
+exports.MONGODB_OBJECT_ID_REGEX = /^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i;

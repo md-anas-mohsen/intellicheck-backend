@@ -25,4 +25,18 @@ router.post(
   assessmentService.submitAssessment
 );
 
+router.patch(
+  "/update-assessment/:assessmentId",
+  validator.body(assessmentValidatorSchema.updateAssessmentRequestModel),
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  assessmentService.updateAssessment
+);
+
+router.post(
+  "/grade-assessment-manually/:assessmentSolutionId",
+  validator.body(assessmentValidatorSchema.manuallyGradeAssessmentRequestModel),
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  assessmentService.manuallyGradeAssessment
+);
+
 module.exports = router;

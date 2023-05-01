@@ -76,7 +76,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
   }
 
   let user;
-  const Model = UserModelFactory(role);
+  const Model = this.UserModelFactory(role);
   user = await Model.create({
     firstName,
     lastName,
@@ -121,7 +121,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getUserProfile = catchAsyncErrors(async (req, res) => {
-  const Model = UserModelFactory(req.user.role);
+  const Model = this.UserModelFactory(req.user.role);
   const user = await Model.findById(req.user._id);
 
   res.status(200).json({

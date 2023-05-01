@@ -21,6 +21,7 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
     dueDate,
     duration,
     questions,
+    allowManualGrading,
   } = req.body;
   const classId = req.params.classId;
 
@@ -52,6 +53,7 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const conn = mongoose.connection;
 
   let assessment;
+  let questionsCreated;
   try {
     const session = await conn.startSession();
     await session.withTransaction(async () => {
@@ -68,6 +70,7 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
         duration,
         totalMarks,
         classId,
+        allowManualGrading,
       });
 
       let questionsData = questions.map((question) => ({
@@ -75,7 +78,7 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
         assessmentId: assessment._id,
       }));
 
-      const questionsCreated = await Question.create(questionsData);
+      questionsCreated = await Question.create(questionsData);
 
       assessment.questions = questionsCreated;
     });
@@ -85,6 +88,7 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
       success: true,
       message: MESSAGES.ASSESSMENT_CREATED,
       assessment,
+      questions: questionsCreated,
     });
   } catch (err) {
     return next(err);
@@ -215,8 +219,17 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
 
 exports.updateAssessment = catchAsyncErrors(async (req, res, next) => {
   const { assessmentId } = req.params;
+  const {
+    assessmentName,
+    description,
+    openDate,
+    dueDate,
+    duration,
+    questions,
+    allowManualGrading,
+  } = req.body;
 
-  const assessment = await Assessment.findById(assessmentId);
+  let assessment = await Assessment.findById(assessmentId);
 
   if (!assessment) {
     return next(new ErrorHandler(MESSAGES.ASSESSMENT_NOT_FOUND, 404));
@@ -231,6 +244,19 @@ exports.updateAssessment = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.ASSESSMENT_NOT_ACCESSIBLE, 403));
   }
 
+  if (!!assessmentName) {
+    const duplicateAssessment = await Assessment.findOne({
+      assessmentName,
+      _id: {
+        $ne: assessmentId,
+      },
+    });
+
+    if (duplicateAssessment) {
+      return next(new ErrorHandler(MESSAGES.ASSESSMENT_WITH_SAME_NAME, 409));
+    }
+  }
+
   const assessmentIsSolved = await AssessmentSolution.find({
     assessmentId,
   });
@@ -238,4 +264,196 @@ exports.updateAssessment = catchAsyncErrors(async (req, res, next) => {
   if (assessmentIsSolved?.length) {
     return next(new ErrorHandler(MESSAGES.ASSESSMENT_SUBMITTED_BY_ONE, 403));
   }
+
+  if (
+    !!assessmentName ||
+    !!description ||
+    !!openDate ||
+    !!dueDate ||
+    !!duration ||
+    allowManualGrading !== undefined
+  ) {
+    assessment = await Assessment.findByIdAndUpdate(
+      assessmentId,
+      {
+        ...(!!assessmentName && { assessmentName }),
+        ...(!!description && { description }),
+        ...(!!openDate && { openDate }),
+        ...(!!dueDate && { dueDate }),
+        ...(!!duration && { duration }),
+        ...(allowManualGrading !== undefined && { allowManualGrading }),
+      },
+      {
+        new: true,
+      }
+    );
+  }
+
+  let modifiedAssessmentQuestions = [];
+
+  const assessmentQuestions = await Question.find({
+    assessmentId,
+  });
+
+  if (!!questions) {
+    try {
+      const conn = mongoose.connection;
+
+      const existingQuestionIds = assessmentQuestions.map(
+        (question) => question._id
+      );
+
+      const incomingQuestionIds = questions.map((question) => {
+        if (!!question._id) {
+          return question._id;
+        }
+      });
+
+      const deletedQuestionIds = existingQuestionIds.filter(
+        (id) => !incomingQuestionIds.includes(id)
+      );
+
+      const newQuestions = questions
+        .map((question) => {
+          if (!question._id) {
+            return question;
+          }
+        })
+        .filter((question) => !!question);
+
+      const oldOrUpdatedQuestions = questions
+        .map((question) => {
+          if (!!question._id) {
+            return question;
+          }
+        })
+        .filter((question) => !!question);
+
+      const session = await conn.startSession();
+
+      await session.withTransaction(async () => {
+        let newQuestionsData = newQuestions.map((question) => ({
+          ...question,
+          assessmentId,
+        }));
+
+        let questionsCreated = newQuestionsData
+          ? await Question.create(newQuestionsData)
+          : [];
+
+        let oldOrUpdatedQuestionsPromises = [];
+
+        oldOrUpdatedQuestions.forEach((question) => {
+          const { _id, ...questionData } = question;
+
+          oldOrUpdatedQuestionsPromises.push(
+            Question.updateOne(
+              {
+                _id,
+              },
+              { ...questionData, assessmentId },
+              { new: true }
+            )
+          );
+        });
+
+        await Question.deleteMany({
+          _id: {
+            $in: deletedQuestionIds,
+          },
+        });
+
+        await Promise.all(oldOrUpdatedQuestionsPromises);
+
+        modifiedAssessmentQuestions = [
+          ...oldOrUpdatedQuestions,
+          ...questionsCreated,
+        ];
+
+        const totalMarks = modifiedAssessmentQuestions.reduce(
+          (acc, curr) => acc + curr.totalMarks,
+          0
+        );
+
+        assessment = await Assessment.findByIdAndUpdate(assessmentId, {
+          totalMarks,
+        });
+      });
+      session.endSession();
+
+      assessment.questions = modifiedAssessmentQuestions;
+      return res.status(200).json({
+        success: true,
+        message: MESSAGES.ASSESSMENT_UPDATED,
+        assessment,
+        questions: modifiedAssessmentQuestions,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.ASSESSMENT_UPDATED,
+    assessment,
+    questions: assessmentQuestions,
+  });
+});
+
+exports.manuallyGradeAssessment = catchAsyncErrors(async (req, res, next) => {
+  const { assessmentSolutionId } = req.params;
+  const { marking } = req.body;
+
+  const assessmentSolution = await AssessmentSolution.findById(
+    assessmentSolutionId
+  )
+    .populate({
+      path: "studentAnswers",
+      populate: { path: "question", model: "Question" },
+    })
+    .exec();
+
+  if (!assessmentSolution) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_NOT_FOUND, 404));
+  }
+
+  const questionIdsToGrade = assessmentSolution.studentAnswers?.map(
+    (answer) => answer.question?._id
+  );
+
+  if (
+    assessmentSolution.studentAnswers?.length !== Object.keys(marking).length
+  ) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_QUESTION_NOT_GRADED, 400));
+  }
+
+  questionIdsToGrade.forEach((questionId) => {
+    console.log(questionId);
+    if (!marking[questionId]) {
+      return next(
+        new ErrorHandler(MESSAGES.ASSESSMENT_QUESTION_NOT_GRADED, 400)
+      );
+    }
+  });
+
+  let marksObtained = 0;
+
+  assessmentSolution.studentAnswers?.forEach((answer, index) => {
+    if (!!answer.question?._id) {
+      assessmentSolution.studentAnswers[index].marks =
+        marking[answer.question._id];
+      marksObtained += marking[answer.question._id];
+    }
+  });
+
+  assessmentSolution.status = assessmentSolutionStatus.GRADED;
+  assessmentSolution.obtainedMarks = marksObtained;
+
+  await assessmentSolution.save();
+
+  return res.status(200).json({
+    message: "Graded",
+    assessmentSolution,
+  });
 });

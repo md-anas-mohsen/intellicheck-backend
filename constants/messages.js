@@ -47,6 +47,9 @@ const MESSAGES = {
   ASSESSMENT_GRADING_PROCESS: "Please until the grading process is complete",
   ASSESSMENT_SUBMITTED_BY_ONE:
     "This assessment cannot be modified, it has already been submitted by one or more users",
+  ASSESSMENT_UPDATED: "Assessment has been updated successfully",
+  ASSESSMENT_SOLUTION_NOT_FOUND: "Assessment solution not found",
+  ASSESSMENT_QUESTION_NOT_GRADED: "One or more questions are not graded",
   INVALID_OTP: "Invalid OTP entered",
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",
