@@ -42,10 +42,22 @@ router.post(
 );
 
 router.get(
+  "/teacher-class-detail/:classId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  classService.getClassDetail
+);
+
+router.get(
   "/get-class-students/:classId",
   isAuthenticatedUser(USER_ROLE.TEACHER),
   validator.query(classValidatorSchema.getClassStudentsRequestModel),
   classService.getClassStudents
+);
+
+router.delete(
+  "/remove-student/:classId/:studentId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  classService.removeStudent
 );
 
 module.exports = router;
