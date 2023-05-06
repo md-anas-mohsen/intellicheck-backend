@@ -459,7 +459,6 @@ exports.manuallyGradeAssessment = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.deleteAssessment = catchAsyncErrors(async (req, res, next) => {
-
   const { assessmentId } = req.params;
 
   const assessment = await Assessment.findById(assessmentId);
@@ -482,20 +481,22 @@ exports.deleteAssessment = catchAsyncErrors(async (req, res, next) => {
   });
 
   if (assessmentIsSolved?.length) {
-    await AssessmentSolution.deleteMany({ 
-      assessmentId: { assessmentId } 
+    await AssessmentSolution.deleteMany({
+      assessmentId: { assessmentId },
     });
   }
 
+  await Question.deleteMany({
+    assessmentId,
+  });
+
   await Assessment.deleteOne({
     _id: assessmentId,
-
   });
 
   // Paginated list of assessments returned
-  
+
   return res.status(200).json({
     message: MESSAGES.ASSESSMENT_DELETED,
   });
-
 });

@@ -54,7 +54,7 @@ exports.createClass = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getClassDetail = catchAsyncErrors(async (req, res, next) => {
-  const { classId } = req.params.classId;
+  const { classId } = req.params;
 
   const teacherHasClass = await Class.findOne({
     _id: classId,
@@ -65,12 +65,15 @@ exports.getClassDetail = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
   }
 
-  const classDetail = await Class.find({ _id: classId }, { _id: 1, className:1, classDescription:1, courseCode:1  });
+  const classDetail = await Class.find(
+    { _id: classId },
+    { _id: 1, className: 1, classDescription: 1, courseCode: 1 }
+  );
 
   return res.status(200).json({
     success: true,
     message: MESSAGES.CLASS_DETAIL_FETCHED,
-    classDetail: classDetail
+    classDetail: classDetail,
   });
 });
 
@@ -91,7 +94,7 @@ exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
   const existingTitle = await Announcement.findOne({ title: title });
 
   if (existingTitle) {
-     return next("Title not available", 409);
+    return next("Title not available", 409);
   }
 
   const announcement = await Announcement.create({
@@ -330,10 +333,9 @@ exports.getClassStudents = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-
 exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
-  const { classId } = req.params.classId;
-  const { studentId } = req.params.studentId;
+  const { classId } = req.params;
+  const { studentId } = req.params;
   const { keyword } = req.query;
 
   const teacherHasClass = await Class.findOne({
@@ -354,61 +356,59 @@ exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
 
   const assessmentIds = assessments.map((assessment) => assessment._id);
 
-  await AssessmentSolution.deleteMany({ 
-    studentId: studentId, 
-    assessmentId: { $in: assessmentIds } 
+  await AssessmentSolution.deleteMany({
+    studentId: studentId,
+    assessmentId: { $in: assessmentIds },
   });
 
-  let studentIds = (
-    await ClassRegistration.find(
-      {
-        classId,
-      },
-      "studentId"
-    )
-  ).map((registration) => registration.studentId);
+  // let studentIds = (
+  //   await ClassRegistration.find(
+  //     {
+  //       classId,
+  //     },
+  //     "studentId"
+  //   )
+  // ).map((registration) => registration.studentId);
 
-  const whereParams = {
-    _id: {
-      $in: studentIds,
-    },
-    ...(!!keyword && {
-      $or: [
-        {
-          firstName: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          lastName: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          username: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          email: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-      ],
-    }),
-  };
+  // const whereParams = {
+  //   _id: {
+  //     $in: studentIds,
+  //   },
+  //   ...(!!keyword && {
+  //     $or: [
+  //       {
+  //         firstName: {
+  //           $regex: keyword,
+  //           $options: "i",
+  //         },
+  //       },
+  //       {
+  //         lastName: {
+  //           $regex: keyword,
+  //           $options: "i",
+  //         },
+  //       },
+  //       {
+  //         username: {
+  //           $regex: keyword,
+  //           $options: "i",
+  //         },
+  //       },
+  //       {
+  //         email: {
+  //           $regex: keyword,
+  //           $options: "i",
+  //         },
+  //       },
+  //     ],
+  //   }),
+  // };
 
-  const students = await applyPagination(Student.find(whereParams), req.query);
-  const count = await Student.count(whereParams);
+  // const students = await applyPagination(Student.find(whereParams), req.query);
+  // const count = await Student.count(whereParams);
 
   return res.status(200).json({
     success: true,
     message: MESSAGES.STUDENT_REMOVED_FROM_CLASS,
-    students,
-    count,
   });
 });
