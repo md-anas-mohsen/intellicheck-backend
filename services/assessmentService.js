@@ -12,6 +12,7 @@ const AssessmentSolution = require("../models/assessmentSolution");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const { assessmentSolutionStatus } = require("../constants/assessment");
+const { gradeSolution } = require("./aiService");
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -202,7 +203,7 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
     answer,
   }));
 
-  const solution = await AssessmentSolution.create({
+  let solution = await AssessmentSolution.create({
     studentId: req.user?._id,
     assessmentId,
     durationInSeconds,
@@ -211,6 +212,7 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
   });
 
   //TODO: Invoke AI to grade submission
+  await gradeSolution(solution);
 
   return res.status(201).json({
     message: MESSAGES.ASSESSMENT_SUBMITTED_SUCCESS,
