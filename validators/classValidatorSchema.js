@@ -21,6 +21,10 @@ const classValidatorSchema = {
   getClassStudentsRequestModel: Joi.object({
     ...PAGINATION_OPTIONS,
   }),
+  getClassesListingRequestModel: Joi.object({
+    ...PAGINATION_OPTIONS,
+    courseCode: Joi.string().optional(),
+  }),
 };
 
 module.exports = classValidatorSchema;

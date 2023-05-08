@@ -22,6 +22,11 @@ const courseSchema = mongoose.Schema({
     default: "",
     required: true,
   },
+  threshold: {
+    type: Map,
+    of: [Number],
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Course", courseSchema);
