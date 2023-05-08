@@ -20,7 +20,6 @@ const ErrorHandler = require("../utils/errorHandler");
 const { applyPagination } = require("../utils/generalHelpers");
 const { readCSV2JSON } = require("../utils/fileHelper");
 const classRegistration = require("../models/classRegistration");
-
 const { USER_ROLE } = require("../constants/user");
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
@@ -364,58 +363,70 @@ exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
     assessmentId: { $in: assessmentIds },
   });
 
-  // let studentIds = (
-  //   await ClassRegistration.find(
-  //     {
-  //       classId,
-  //     },
-  //     "studentId"
-  //   )
-  // ).map((registration) => registration.studentId);
-
-  // const whereParams = {
-  //   _id: {
-  //     $in: studentIds,
-  //   },
-  //   ...(!!keyword && {
-  //     $or: [
-  //       {
-  //         firstName: {
-  //           $regex: keyword,
-  //           $options: "i",
-  //         },
-  //       },
-  //       {
-  //         lastName: {
-  //           $regex: keyword,
-  //           $options: "i",
-  //         },
-  //       },
-  //       {
-  //         username: {
-  //           $regex: keyword,
-  //           $options: "i",
-  //         },
-  //       },
-  //       {
-  //         email: {
-  //           $regex: keyword,
-  //           $options: "i",
-  //         },
-  //       },
-  //     ],
-  //   }),
-  // };
-
-  // const students = await applyPagination(Student.find(whereParams), req.query);
-  // const count = await Student.count(whereParams);
-
   return res.status(200).json({
     success: true,
     message: MESSAGES.STUDENT_REMOVED_FROM_CLASS,
   });
 });
 
+exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
+  const { classId } = req.params;
+  const { keyword } = req.query;
+
+  if (req.user?.role === USER_ROLE.TEACHER) {
+    const teacherHasClass = await Class.findOne({
+      _id: classId,
+      teacherId: req.user?._id,
+    });
+
+    if (!teacherHasClass) {
+      return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
+    }
+  } else if (req.user?.role === USER_ROLE.STUDENT) {
+    const studentHasClass = await ClassRegistration.findOne({
+      classid: classId,
+      studentId: req.user?._id,
+    });
+
+    if (!studentHasClass) {
+      return next(new ErrorHandler(MESSAGES.STUDENT_CLASS_NOT_FOUND, 403));
+    }
+  }
+
+  const whereParams = {
+    classId: classId,
+    ...(!!keyword && {
+      $or: [
+        {
+          description: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          title: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  const announcements = await applyPagination(
+    Announcement.find(whereParams, "title description _id"),
+    req.query
+  );
+
+  const count = await Announcement.count(whereParams);
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.ANNOUCEMENTS_FETCHED,
+    announcements,
+    count,
+  });
+});
 exports.getClasses = async (req, res, next) => {
   const { keyword, courseCode } = req.query;
 

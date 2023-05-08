@@ -35,6 +35,12 @@ router.post(
   classService.postAnnouncement
 );
 
+router.get(
+  "/view-annoucements/:classId",
+  validator.query(announcementValidatorSchema.viewAnnouncementsRequestModel),
+  classService.getClassStudents
+);
+
 router.post(
   "/add-single-student/:classId",
   isAuthenticatedUser(USER_ROLE.TEACHER),
