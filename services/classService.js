@@ -21,6 +21,8 @@ const { applyPagination } = require("../utils/generalHelpers");
 const { readCSV2JSON } = require("../utils/fileHelper");
 const classRegistration = require("../models/classRegistration");
 
+const { USER_ROLE } = require("../constants/user");
+
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
   const { className, courseCode, classDescription } = req.body;
   const teacherId = req.user._id;
@@ -290,6 +292,7 @@ exports.getClassStudents = catchAsyncErrors(async (req, res, next) => {
   ).map((registration) => registration.studentId);
 
   const whereParams = {
+    classId,
     _id: {
       $in: studentIds,
     },
@@ -412,3 +415,63 @@ exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
     message: MESSAGES.STUDENT_REMOVED_FROM_CLASS,
   });
 });
+
+exports.getClasses = async (req, res, next) => {
+  const { keyword, courseCode } = req.query;
+
+  const whereParams = {
+    ...(!!courseCode && { courseCode }),
+    ...(!!keyword && {
+      $or: [
+        {
+          className: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          classDescription: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          courseCode: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    const userClasses = await ClassRegistration.find({
+      studentId: req.user?._id,
+    });
+
+    classIds = userClasses.map((userClass) => userClass.classId);
+
+    whereParams._id = {
+      $in: classIds,
+    };
+  }
+
+  if (req.user?.role === USER_ROLE.TEACHER) {
+    whereParams.teacherId = req.user?._id;
+  }
+
+  const classes = await applyPagination(Class.find(whereParams), req.query)
+    .populate({
+      path: "teacherId",
+      select: { _id: 1, firstName: 1, lastName: 1 },
+    })
+    .exec();
+  const count = await Class.count(whereParams);
+
+  return res.status(200).json({
+    success: true,
+    classes,
+    count,
+  });
+};

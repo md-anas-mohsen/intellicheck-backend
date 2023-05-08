@@ -6,6 +6,13 @@ const { isAuthenticatedUser } = require("../middlewares/auth");
 const { USER_ROLE } = require("../constants/user");
 const validator = new SchemaValidator();
 
+// router.get(
+//   "/",
+//   isAuthenticatedUser(),
+//   validator.query(assessmentValidatorSchema.assessmentListingRequestModel),
+//   assessmentService.getAssessmentListing
+// );
+
 router.post(
   "/create-assessment/:classId",
   isAuthenticatedUser(USER_ROLE.TEACHER),
