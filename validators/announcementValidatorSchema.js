@@ -7,6 +7,9 @@ const announcementValidatorSchema = {
     title: Joi.string().max(25).required(),
     description: Joi.string().max(200).required(),
   }),
+  viewAnnouncementsRequestModel: Joi.object({
+    ...PAGINATION_OPTIONS,
+  }),
 };
 
 module.exports = announcementValidatorSchema;

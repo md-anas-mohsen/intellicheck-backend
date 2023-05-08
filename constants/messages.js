@@ -10,6 +10,7 @@ const MESSAGES = {
   USER_CREATION_SUCCESS: "User created successfully",
   CLASS_CREATION_SUCCESS: "Class created successfully",
   ANNOUNCEMENT_CREATION_SUCCESS: "Announcement created successfully",
+  ANNOUCEMENTs_FETCHED: "Annoucments fetched successfully",
   LOGIN_REQUIRED: "Login to view resource",
   NOT_FOUND: "Not found",
   UPDATED: "Updated",
@@ -28,6 +29,7 @@ const MESSAGES = {
   SUCCESS: "Success",
   LOGOUT_SUCCESS: "Logged out successfully",
   TEACHER_CLASS_NOT_FOUND: "This class does not belong to this teacher",
+  STUDENT_CLASS_NOT_FOUND: "This class does not belong to this student",
   CLASS_NOT_FOUND: "Class not found",
   STUDENT_ADDED_TO_CLASS: "Student added to class successfully",
   STUDENT_REGISTRATION_REQUEST_SENT:
