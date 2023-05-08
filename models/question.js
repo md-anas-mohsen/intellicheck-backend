@@ -24,10 +24,12 @@ const questionSchema = mongoose.Schema({
     max: [2, "Maximum marks for a question are 2"],
   },
   msAnswer: [
-    {
-      type: String,
-      required: [true, "Please provide marking scheme answers"],
-    },
+    [
+      {
+        type: String,
+        required: [true, "Please provide marking scheme answers"],
+      },
+    ],
   ],
   options: [
     //for MCQs

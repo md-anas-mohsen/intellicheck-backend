@@ -291,6 +291,7 @@ exports.getClassStudents = catchAsyncErrors(async (req, res, next) => {
   ).map((registration) => registration.studentId);
 
   const whereParams = {
+    classId,
     _id: {
       $in: studentIds,
     },
@@ -373,7 +374,6 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
   const { keyword } = req.query;
 
   if (req.user?.role === USER_ROLE.TEACHER) {
-
     const teacherHasClass = await Class.findOne({
       _id: classId,
       teacherId: req.user?._id,
@@ -382,11 +382,7 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
     if (!teacherHasClass) {
       return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
     }
-
-  }
-
-  else if (req.user?.role === USER_ROLE.STUDENT) {
-
+  } else if (req.user?.role === USER_ROLE.STUDENT) {
     const studentHasClass = await ClassRegistration.findOne({
       classid: classId,
       studentId: req.user?._id,
@@ -395,30 +391,32 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
     if (!studentHasClass) {
       return next(new ErrorHandler(MESSAGES.STUDENT_CLASS_NOT_FOUND, 403));
     }
+  }
 
-  }  
+  const whereParams = {
+    classId: classId,
+    ...(!!keyword && {
+      $or: [
+        {
+          description: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          title: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
 
-   const whereParams = {
-     classId: classId,
-     ...(!!keyword && {
-       $or: [
-         {
-           description: {
-             $regex: keyword,
-             $options: "i",
-           },
-         },
-         {
-           title: {
-             $regex: keyword,
-             $options: "i",
-           },
-         }
-       ],
-     }),
-   };
-
-  const announcements = await applyPagination(Announcement.find(whereParams, 'title description _id'), req.query);
+  const announcements = await applyPagination(
+    Announcement.find(whereParams, "title description _id"),
+    req.query
+  );
 
   const count = await Announcement.count(whereParams);
 
@@ -426,6 +424,65 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
     success: true,
     message: MESSAGES.ANNOUCEMENTS_FETCHED,
     announcements,
-    count
+    count,
   });
 });
+exports.getClasses = async (req, res, next) => {
+  const { keyword, courseCode } = req.query;
+
+  const whereParams = {
+    ...(!!courseCode && { courseCode }),
+    ...(!!keyword && {
+      $or: [
+        {
+          className: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          classDescription: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          courseCode: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    const userClasses = await ClassRegistration.find({
+      studentId: req.user?._id,
+    });
+
+    classIds = userClasses.map((userClass) => userClass.classId);
+
+    whereParams._id = {
+      $in: classIds,
+    };
+  }
+
+  if (req.user?.role === USER_ROLE.TEACHER) {
+    whereParams.teacherId = req.user?._id;
+  }
+
+  const classes = await applyPagination(Class.find(whereParams), req.query)
+    .populate({
+      path: "teacherId",
+      select: { _id: 1, firstName: 1, lastName: 1 },
+    })
+    .exec();
+  const count = await Class.count(whereParams);
+
+  return res.status(200).json({
+    success: true,
+    classes,
+    count,
+  });
+};

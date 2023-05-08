@@ -12,6 +12,7 @@ const AssessmentSolution = require("../models/assessmentSolution");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const { assessmentSolutionStatus } = require("../constants/assessment");
+const { gradeSolution } = require("./aiService");
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -106,6 +107,13 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
 
   let assessmentSolution;
 
+  if (
+    Date.now() <
+    new Date(assessment.dueDate).getTime() + assessment.duration
+  ) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_GRADING_PROCESS, 403));
+  }
+
   if (req.user?.role === USER_ROLE.STUDENT) {
     const userEnrolledInThisClass = await ClassRegistration.findOne({
       userId: req.user?._id,
@@ -119,7 +127,22 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
     assessmentSolution = await AssessmentSolution.findOne({
       studentId: req.user?._id,
       assessmentId,
-    });
+    })
+      .populate({
+        path: "studentAnswers",
+        populate: {
+          path: "question",
+          model: "Question",
+          select: {
+            _id: 1,
+            questionType: 1,
+            question: 1,
+            totalMarks: 1,
+            options: 1,
+          },
+        },
+      })
+      .exec();
 
     if (
       assessmentSolution &&
@@ -150,9 +173,12 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
 
   questions = await assessmentQuestionsQuery;
 
+  let studentAnswers = assessmentSolution?.studentAnswers;
+
   return res.status(200).json({
     assessment,
     questions,
+    studentAnswers,
   });
 });
 
@@ -202,7 +228,7 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
     answer,
   }));
 
-  const solution = await AssessmentSolution.create({
+  let solution = await AssessmentSolution.create({
     studentId: req.user?._id,
     assessmentId,
     durationInSeconds,
@@ -211,6 +237,7 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
   });
 
   //TODO: Invoke AI to grade submission
+  await gradeSolution(solution);
 
   return res.status(201).json({
     message: MESSAGES.ASSESSMENT_SUBMITTED_SUCCESS,
@@ -500,3 +527,9 @@ exports.deleteAssessment = catchAsyncErrors(async (req, res, next) => {
     message: MESSAGES.ASSESSMENT_DELETED,
   });
 });
+
+// exports.getAssessmentListing = async (req, res, next) => {
+//   const { classId } = req.query;
+
+//   const
+// };

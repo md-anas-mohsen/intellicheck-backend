@@ -7,6 +7,7 @@ const logger = require("./middlewares/logReqRes");
 const users = require("./routes/user");
 const classes = require("./routes/class");
 const assessments = require("./routes/assessment");
+const courses = require("./routes/course");
 
 const errorMiddleware = require("./middlewares/errors");
 const logErrorMiddleware = require("./middlewares/logErrors");
@@ -35,6 +36,7 @@ app.use(
 app.use("/api/users", users);
 app.use("/api/classes", classes);
 app.use("/api/assessments", assessments);
+app.use("/api/course", courses);
 
 // app.use(logger);
 

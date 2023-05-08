@@ -7,6 +7,13 @@ const { isAuthenticatedUser } = require("../middlewares/auth");
 const { USER_ROLE } = require("../constants/user");
 const validator = new SchemaValidator();
 
+router.get(
+  "/",
+  isAuthenticatedUser(),
+  validator.body(classValidatorSchema.getClassesListingRequestModel),
+  classService.getClasses
+);
+
 router.post(
   "/create-class",
   isAuthenticatedUser(USER_ROLE.TEACHER),
