@@ -40,6 +40,11 @@ const assessmentSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  status: {
+    type: String,
+    enum: Object.values(assessmentStatus),
+    required: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now(),
