@@ -11,8 +11,12 @@ const ClassRegistration = require("../models/classRegistration");
 const AssessmentSolution = require("../models/assessmentSolution");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const { assessmentSolutionStatus } = require("../constants/assessment");
+const {
+  assessmentSolutionStatus,
+  assessmentStatus,
+} = require("../constants/assessment");
 const { gradeSolution } = require("./aiService");
+const { applyPagination } = require("../utils/generalHelpers");
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -528,8 +532,151 @@ exports.deleteAssessment = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// exports.getAssessmentListing = async (req, res, next) => {
-//   const { classId } = req.query;
+exports.getAssessmentListing = async (req, res, next) => {
+  const { classId, keyword } = req.query;
 
-//   const
-// };
+  let classIds = [];
+  if (req.user?.role === USER_ROLE.STUDENT && !!classId) {
+    const registeredInClass = await ClassRegistration.findOne({
+      classId,
+      studentId: req.user?._id,
+    });
+
+    if (!registeredInClass) {
+      return next(
+        new ErrorHandler(MESSAGES.ASSESSMENT_CANNOT_VIEW_FOR_THIS_CLASS, 403)
+      );
+    }
+  } else if (req.user?.role === USER_ROLE.STUDENT && !classId) {
+    classIds = (
+      await ClassRegistration.find(
+        {
+          studentId: req.user?._id,
+        },
+        "classId"
+      )
+    ).map((classRegistration) => classRegistration.classId);
+  }
+
+  if (req.user?.role === USER_ROLE.TEACHER && !!classId) {
+    const classBelongsToTeacher = await Class.findOne({
+      _id: classId,
+      teacherId: req.user?._id,
+    });
+
+    if (!classBelongsToTeacher) {
+      return next(
+        new ErrorHandler(MESSAGES.ASSESSMENT_CANNOT_VIEW_FOR_THIS_CLASS, 403)
+      );
+    }
+  }
+
+  const whereParams = {
+    ...(req.user?.role === USER_ROLE.STUDENT && {
+      classId: {
+        $in: classIds,
+      },
+    }),
+    ...(!!classId && { classId }),
+    ...(req.user?.role === USER_ROLE.TEACHER && { teacherId: req.user?._id }),
+    ...(!!keyword && {
+      $or: [
+        {
+          assessmentName: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  let assessments = await applyPagination(
+    Assessment.find(
+      whereParams,
+      "_id assessmentName openDate dueDate description duration totalMarks createdAt"
+    ),
+    req.query
+  )
+    .populate({
+      path: "classId",
+      select: {
+        _id: 1,
+        className: 1,
+        courseCode: 1,
+        classDescription: 1,
+      },
+    })
+    .exec();
+  const count = await Assessment.count(whereParams);
+
+  let attempted = {};
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    (
+      await AssessmentSolution.find(
+        {
+          studentId: req.user?._id,
+        },
+        "_id"
+      )
+    ).forEach((solution) => (attempted[solution._id] = true));
+  }
+
+  let status = "";
+  assessments = assessments.map((assessment) => {
+    status = "";
+
+    let currentTimestamp = Date.now();
+    let dueDateTimestamp = new Date(assessment.dueDate).getTime();
+    let openDateTimestamp = new Date(assessment.openDate).getTime();
+
+    switch (req.user?.role) {
+      case USER_ROLE.STUDENT: {
+        if (
+          attempted[assessment._id] &&
+          currentTimestamp < dueDateTimestamp + assessment.duration
+        ) {
+          status = assessmentStatus.UNGRADED;
+        } else if (attempted[assessment._id]) {
+          status = assessmentStatus.GRADED;
+        } else if (
+          !attempted[assessment._id] &&
+          currentTimestamp > dueDateTimestamp + assessment.duration
+        ) {
+          status = assessmentStatus.EXPIRED;
+        } else if (currentTimestamp < openDateTimestamp) {
+          status = assessmentStatus.INACTIVE;
+        } else if (currentTimestamp >= openDateTimestamp) {
+          status = assessmentStatus.ACTIVE;
+        }
+        break;
+      }
+      case USER_ROLE.TEACHER: {
+        if (currentTimestamp < openDateTimestamp) {
+          status = assessmentStatus.INACTIVE;
+        } else if (currentTimestamp >= openDateTimestamp) {
+          status = assessmentStatus.ACTIVE;
+        } else if (currentTimestamp > dueDateTimestamp + assessment.duration) {
+          status = assessmentStatus.EXPIRED;
+        }
+        break;
+      }
+    }
+
+    assessment.status = status || assessment.status;
+
+    return assessment;
+  });
+
+  return res.status(200).json({
+    success: true,
+    assessments,
+    count,
+  });
+};

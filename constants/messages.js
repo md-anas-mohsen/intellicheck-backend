@@ -55,6 +55,8 @@ const MESSAGES = {
   ASSESSMENT_SOLUTION_NOT_FOUND: "Assessment solution not found",
   ASSESSMENT_QUESTION_NOT_GRADED: "One or more questions are not graded",
   ASSESSMENT_DELETED: "Assessment deleted successfully",
+  ASSESSMENT_CANNOT_VIEW_FOR_THIS_CLASS:
+    "You cannot view assessments for this class",
   INVALID_OTP: "Invalid OTP entered",
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",
@@ -62,6 +64,7 @@ const MESSAGES = {
   PROFILE_UPDATED: "Profile updated successfully",
   USERNAME_ALREADY_TAKEN: "Username has been already used",
   SETTINGS_UPDATED: "Settings updated successfully",
+  FORBIDDEN: "FORBIDDEN",
 };
 
 module.exports = MESSAGES;
