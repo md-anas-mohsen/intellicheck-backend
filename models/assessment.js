@@ -32,6 +32,9 @@ const assessmentSchema = mongoose.Schema({
     type: Number,
     required: [true, "Provide total marks of assessment"],
   },
+  obtainedMarks: {
+    type: Number,
+  },
   cancelled: {
     type: Boolean,
     default: false,
