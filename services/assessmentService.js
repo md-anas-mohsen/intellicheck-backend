@@ -143,6 +143,7 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
             question: 1,
             totalMarks: 1,
             options: 1,
+            regradeRequest: 1,
           },
         },
       })
@@ -625,7 +626,11 @@ exports.getAssessmentListing = async (req, res, next) => {
     });
 
     attemptedAssessments.forEach((solution) => {
-      attempted[solution.assessmentId] = solution.obtainedMarks;
+      attempted[solution.assessmentId] = {
+        obtainedMarks: solution.obtainedMarks,
+        regradeRequest:
+          solution.status === assessmentSolutionStatus.REGRADE_REQUESTED,
+      };
       totalObtainedMarks += solution.obtainedMarks;
     });
   }
@@ -647,8 +652,12 @@ exports.getAssessmentListing = async (req, res, next) => {
           status = assessmentStatus.UNGRADED;
         } else if (!!attempted[assessment._id]) {
           status = assessmentStatus.GRADED;
-          assessment.obtainedMarks = attempted[assessment._id];
+          assessment.obtainedMarks = attempted[assessment._id].obtainedMarks;
           totalAvailableMarks += assessment.totalMarks;
+
+          if (attempted[assessment._id].regradeRequest) {
+            status = assessmentStatus.REGRADE_REQUESTED;
+          }
         } else if (
           !attempted[assessment._id] &&
           currentTimestamp > dueDateTimestamp + assessment.duration
@@ -686,5 +695,62 @@ exports.getAssessmentListing = async (req, res, next) => {
     }),
     assessments,
     count,
+  });
+};
+
+exports.createRegradeRequest = async (req, res, next) => {
+  const { assessmentId, questionId } = req.body;
+
+  const assessmentSolution = await AssessmentSolution.findOne({
+    assessmentId,
+    studentId: req.user?._id,
+  })
+    .populate({
+      path: "studentAnswers",
+      populate: {
+        path: "question",
+        model: "Question",
+        select: {
+          _id: 1,
+          questionType: 1,
+          question: 1,
+          totalMarks: 1,
+          options: 1,
+          regradeRequest: 1,
+        },
+      },
+    })
+    .exec();
+
+  if (!assessmentSolution) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_NOT_FOUND, 404));
+  }
+
+  for (let i = 0; i < assessmentSolution.studentAnswers.length; i++) {
+    // console.log(
+    //   `${assessmentSolution.studentAnswers[i].question._id} === ${questionId}, ${assessmentSolution.studentAnswers[i].regradeRequest}`
+    // );
+
+    if (
+      assessmentSolution.studentAnswers[i].question?._id?.toString() ===
+        questionId &&
+      !assessmentSolution.studentAnswers[i].regradeRequest
+    ) {
+      assessmentSolution.studentAnswers[i].regradeRequest = true;
+    } else {
+      return res.status(201).json({
+        message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
+        studentAnswers: assessmentSolution.studentAnswers,
+      });
+    }
+  }
+
+  assessmentSolution.status = assessmentSolutionStatus.REGRADE_REQUESTED;
+
+  await assessmentSolution.save();
+
+  return res.status(201).json({
+    message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
+    studentAnswers: assessmentSolution.studentAnswers,
   });
 };

@@ -52,4 +52,10 @@ router.delete(
   assessmentService.deleteAssessment
 );
 
+router.post(
+  "/make-regrade-request",
+  isAuthenticatedUser(USER_ROLE.STUDENT),
+  assessmentService.createRegradeRequest
+);
+
 module.exports = router;

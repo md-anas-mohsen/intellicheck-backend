@@ -65,6 +65,7 @@ const MESSAGES = {
   USERNAME_ALREADY_TAKEN: "Username has been already used",
   SETTINGS_UPDATED: "Settings updated successfully",
   FORBIDDEN: "FORBIDDEN",
+  REGRADE_REQUEST_SUBMITTED: "Regrade request submitted",
 };
 
 module.exports = MESSAGES;
