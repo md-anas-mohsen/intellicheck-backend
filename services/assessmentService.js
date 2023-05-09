@@ -618,14 +618,13 @@ exports.getAssessmentListing = async (req, res, next) => {
 
   let attempted = {};
   if (req.user?.role === USER_ROLE.STUDENT) {
-    (
-      await AssessmentSolution.find(
-        {
-          studentId: req.user?._id,
-        },
-        "_id"
-      )
-    ).forEach((solution) => (attempted[solution._id] = true));
+    const attemptedAssessments = await AssessmentSolution.find({
+      studentId: req.user?._id,
+    });
+
+    attemptedAssessments.forEach(
+      (solution) => (attempted[solution.assessmentId] = solution.obtainedMarks)
+    );
   }
 
   let status = "";
@@ -639,12 +638,13 @@ exports.getAssessmentListing = async (req, res, next) => {
     switch (req.user?.role) {
       case USER_ROLE.STUDENT: {
         if (
-          attempted[assessment._id] &&
+          !!attempted[assessment._id] &&
           currentTimestamp < dueDateTimestamp + assessment.duration
         ) {
           status = assessmentStatus.UNGRADED;
-        } else if (attempted[assessment._id]) {
+        } else if (!!attempted[assessment._id]) {
           status = assessmentStatus.GRADED;
+          assessment.obtainedMarks = attempted[assessment._id];
         } else if (
           !attempted[assessment._id] &&
           currentTimestamp > dueDateTimestamp + assessment.duration
