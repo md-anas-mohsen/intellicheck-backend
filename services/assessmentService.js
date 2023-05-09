@@ -617,14 +617,17 @@ exports.getAssessmentListing = async (req, res, next) => {
   const count = await Assessment.count(whereParams);
 
   let attempted = {};
+  let totalObtainedMarks = 0;
+  let totalAvailableMarks = 0;
   if (req.user?.role === USER_ROLE.STUDENT) {
     const attemptedAssessments = await AssessmentSolution.find({
       studentId: req.user?._id,
     });
 
-    attemptedAssessments.forEach(
-      (solution) => (attempted[solution.assessmentId] = solution.obtainedMarks)
-    );
+    attemptedAssessments.forEach((solution) => {
+      attempted[solution.assessmentId] = solution.obtainedMarks;
+      totalObtainedMarks += solution.obtainedMarks;
+    });
   }
 
   let status = "";
@@ -645,6 +648,7 @@ exports.getAssessmentListing = async (req, res, next) => {
         } else if (!!attempted[assessment._id]) {
           status = assessmentStatus.GRADED;
           assessment.obtainedMarks = attempted[assessment._id];
+          totalAvailableMarks += assessment.totalMarks;
         } else if (
           !attempted[assessment._id] &&
           currentTimestamp > dueDateTimestamp + assessment.duration
@@ -676,6 +680,10 @@ exports.getAssessmentListing = async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
+    ...(req.user?.role === USER_ROLE.STUDENT && {
+      totalObtainedMarks,
+      totalAvailableMarks,
+    }),
     assessments,
     count,
   });
