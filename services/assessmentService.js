@@ -726,22 +726,19 @@ exports.createRegradeRequest = async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_NOT_FOUND, 404));
   }
 
-  for (let i = 0; i < assessmentSolution.studentAnswers.length; i++) {
-    // console.log(
-    //   `${assessmentSolution.studentAnswers[i].question._id} === ${questionId}, ${assessmentSolution.studentAnswers[i].regradeRequest}`
-    // );
+  if (assessmentSolution.status !== assessmentSolutionStatus.GRADED) {
+    return next(
+      new ErrorHandler(MESSAGES.REGRADE_REQUEST_ONLY_ON_GRADED_ASSESSMENT, 400)
+    );
+  }
 
+  for (let i = 0; i < assessmentSolution.studentAnswers.length; i++) {
     if (
       assessmentSolution.studentAnswers[i].question?._id?.toString() ===
         questionId &&
       !assessmentSolution.studentAnswers[i].regradeRequest
     ) {
       assessmentSolution.studentAnswers[i].regradeRequest = true;
-    } else {
-      return res.status(201).json({
-        message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
-        studentAnswers: assessmentSolution.studentAnswers,
-      });
     }
   }
 
@@ -752,5 +749,113 @@ exports.createRegradeRequest = async (req, res, next) => {
   return res.status(201).json({
     message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
     studentAnswers: assessmentSolution.studentAnswers,
+  });
+};
+
+exports.getRegradeRequestsListing = async (req, res, next) => {
+  let { studentId, classId } = req.query;
+
+  let whereParams = {};
+
+  if (!!studentId) {
+    whereParams.studentId = studentId;
+  }
+
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    whereParams.studentId = req.user?._id;
+
+    const studentClasses = await ClassRegistration.find({
+      studentId,
+    });
+
+    const classIds = studentClasses.map((studentClass) => studentClass.classId);
+
+    if (
+      !!classId &&
+      classIds.findIndex((id) => id.toString() === classId) === -1
+    ) {
+      return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+    }
+  }
+
+  if (req.user?.role === USER_ROLE.TEACHER) {
+    const teacherClasses = await Class.find({
+      teacherId: req.user?._id,
+    });
+
+    const classIds = teacherClasses.map((teacherClass) => teacherClass._id);
+
+    if (
+      !!classId &&
+      classIds.findIndex((id) => id.toString() === classId) === -1
+    ) {
+      return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+    }
+
+    whereParams.classId = {
+      $in: classIds,
+    };
+  }
+
+  if (!!classId) {
+    whereParams.assessmentId = classId;
+  }
+
+  whereParams.studentAnswers = {
+    $elemMatch: {
+      regradeRequest: true,
+    },
+  };
+
+  whereParams.status = assessmentStatus.REGRADE_REQUESTED;
+
+  const assessmentSolutionsUpForRegrade = await applyPagination(
+    AssessmentSolution.find(whereParams)
+      .populate({
+        path: "studentId",
+        select: {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+        },
+      })
+      .populate({
+        path: "assessmentId",
+        select: {
+          _id: 1,
+          assessmentName: 1,
+          totalMarks: 1,
+        },
+        populate: {
+          path: "classId",
+          select: {
+            _id: 1,
+            className: 1,
+            courseCode: 1,
+          },
+        },
+      }),
+    req.query
+  );
+
+  const count = await AssessmentSolution.count(whereParams);
+
+  const regradeRequests = assessmentSolutionsUpForRegrade.map((solution) => ({
+    _id: solution._id,
+    studentId: solution.studentId?._id,
+    studentFirstName: solution.studentId?.firstName,
+    studentLastName: solution.studentId?.lastName,
+    classId: solution.assessmentId?.classId?._id,
+    className: solution.assessmentId?.classId?.className,
+    courseCode: solution.assessmentId?.classId?.courseCode,
+    assessmentName: solution.assessmentId?.assessmentName,
+    obtainedMarks: solution.obtainedMarks,
+    totalMarks: solution.assessmentId.totalMarks,
+  }));
+
+  return res.status(200).json({
+    success: true,
+    regradeRequests,
+    count,
   });
 };

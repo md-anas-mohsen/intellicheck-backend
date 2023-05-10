@@ -55,7 +55,15 @@ router.delete(
 router.post(
   "/make-regrade-request",
   isAuthenticatedUser(USER_ROLE.STUDENT),
+  validator.body(assessmentValidatorSchema.createRegradeRequestModel),
   assessmentService.createRegradeRequest
+);
+
+router.get(
+  "/regrade-requests",
+  isAuthenticatedUser(),
+  validator.query(assessmentValidatorSchema.getRegradeRequestsModel),
+  assessmentService.getRegradeRequestsListing
 );
 
 module.exports = router;
