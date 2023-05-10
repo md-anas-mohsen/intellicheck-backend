@@ -65,7 +65,9 @@ const assessmentValidatorSchema = {
             .min(1)
             .max(2)
             .required(),
-          msAnswer: Joi.array().items(Joi.string()),
+          msAnswer: Joi.array()
+            .items(Joi.array().items(Joi.string()))
+            .label("Mark scheme"),
         })
       )
       .optional(),

@@ -1,5 +1,6 @@
 require("dotenv").config({ path: "./.env" });
 require("./config/database");
+const chalk = require("chalk");
 const server = require("./app");
 const cloudinary = require("cloudinary");
 
@@ -12,5 +13,5 @@ cloudinary.config({
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(chalk.bgGreenBright(`Server running on ${PORT}`));
 });

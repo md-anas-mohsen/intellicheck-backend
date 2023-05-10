@@ -68,6 +68,9 @@ const MESSAGES = {
   REGRADE_REQUEST_SUBMITTED: "Regrade request submitted",
   REGRADE_REQUEST_ONLY_ON_GRADED_ASSESSMENT:
     "Assessment is not graded, regrade request cannot be submitted",
+  CANNOT_INSTANTIATE_ABSTRACT_CLASS: "Cannot instantiate abstract class",
+  AI_GRADING_SERVICE_URL_NOT_PROVIDED:
+    "AI grading service URL is not present in the environment, please add it to enable grading of descriptive questions",
 };
 
 module.exports = MESSAGES;

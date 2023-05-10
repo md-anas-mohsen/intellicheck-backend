@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const chalk = require("chalk");
 const logger = require("./middlewares/logReqRes");
 
 const users = require("./routes/user");
@@ -20,15 +21,15 @@ app.use(cookieParser());
 app.use(
   morgan(function (tokens, req, res) {
     return [
-      tokens.method(req, res),
-      tokens.url(req, res),
-      tokens.status(req, res),
+      chalk.yellow(tokens.method(req, res)),
+      chalk.cyan(chalk.underline(tokens.url(req, res))),
+      chalk.magenta(chalk.bold(tokens.status(req, res))),
+      "\nContent length:",
       tokens.res(req, res, "content-length"),
-      "-",
-      tokens["response-time"](req, res),
-      "ms",
-      "\nrequest: ",
-      tokens.body(req, res),
+      "\nResponse time:",
+      chalk.underline(`${tokens["response-time"](req, res)} ms`),
+      chalk.cyan("\nrequest: "),
+      chalk.cyan(tokens.body(req, res)),
     ].join(" ");
   })
 );
@@ -43,7 +44,7 @@ app.use("/api/course", courses);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "API - Boilerplate",
+    message: "API - RapidCheck",
   });
 });
 
