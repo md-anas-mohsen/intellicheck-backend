@@ -86,6 +86,14 @@ const assessmentValidatorSchema = {
     ...PAGINATION_OPTIONS,
     classId: Joi.string(),
   }),
+  createRegradeRequestModel: Joi.object({
+    assessmentId: Joi.string(),
+    questionId: Joi.string(),
+  }),
+  getRegradeRequestsModel: Joi.object({
+    ...PAGINATION_OPTIONS,
+    classId: Joi.string(),
+    studentId: Joi.string(),
+  }),
 };
-
 module.exports = assessmentValidatorSchema;

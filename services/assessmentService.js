@@ -143,6 +143,7 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
             question: 1,
             totalMarks: 1,
             options: 1,
+            regradeRequest: 1,
           },
         },
       })
@@ -625,7 +626,11 @@ exports.getAssessmentListing = async (req, res, next) => {
     });
 
     attemptedAssessments.forEach((solution) => {
-      attempted[solution.assessmentId] = solution.obtainedMarks;
+      attempted[solution.assessmentId] = {
+        obtainedMarks: solution.obtainedMarks,
+        regradeRequest:
+          solution.status === assessmentSolutionStatus.REGRADE_REQUESTED,
+      };
       totalObtainedMarks += solution.obtainedMarks;
     });
   }
@@ -647,8 +652,12 @@ exports.getAssessmentListing = async (req, res, next) => {
           status = assessmentStatus.UNGRADED;
         } else if (!!attempted[assessment._id]) {
           status = assessmentStatus.GRADED;
-          assessment.obtainedMarks = attempted[assessment._id];
+          assessment.obtainedMarks = attempted[assessment._id].obtainedMarks;
           totalAvailableMarks += assessment.totalMarks;
+
+          if (attempted[assessment._id].regradeRequest) {
+            status = assessmentStatus.REGRADE_REQUESTED;
+          }
         } else if (
           !attempted[assessment._id] &&
           currentTimestamp > dueDateTimestamp + assessment.duration
@@ -685,6 +694,168 @@ exports.getAssessmentListing = async (req, res, next) => {
       totalAvailableMarks,
     }),
     assessments,
+    count,
+  });
+};
+
+exports.createRegradeRequest = async (req, res, next) => {
+  const { assessmentId, questionId } = req.body;
+
+  const assessmentSolution = await AssessmentSolution.findOne({
+    assessmentId,
+    studentId: req.user?._id,
+  })
+    .populate({
+      path: "studentAnswers",
+      populate: {
+        path: "question",
+        model: "Question",
+        select: {
+          _id: 1,
+          questionType: 1,
+          question: 1,
+          totalMarks: 1,
+          options: 1,
+          regradeRequest: 1,
+        },
+      },
+    })
+    .exec();
+
+  if (!assessmentSolution) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_NOT_FOUND, 404));
+  }
+
+  if (assessmentSolution.status !== assessmentSolutionStatus.GRADED) {
+    return next(
+      new ErrorHandler(MESSAGES.REGRADE_REQUEST_ONLY_ON_GRADED_ASSESSMENT, 400)
+    );
+  }
+
+  for (let i = 0; i < assessmentSolution.studentAnswers.length; i++) {
+    if (
+      assessmentSolution.studentAnswers[i].question?._id?.toString() ===
+        questionId &&
+      !assessmentSolution.studentAnswers[i].regradeRequest
+    ) {
+      assessmentSolution.studentAnswers[i].regradeRequest = true;
+    }
+  }
+
+  assessmentSolution.status = assessmentSolutionStatus.REGRADE_REQUESTED;
+
+  await assessmentSolution.save();
+
+  return res.status(201).json({
+    message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
+    studentAnswers: assessmentSolution.studentAnswers,
+  });
+};
+
+exports.getRegradeRequestsListing = async (req, res, next) => {
+  let { studentId, classId } = req.query;
+
+  let whereParams = {};
+
+  if (!!studentId) {
+    whereParams.studentId = studentId;
+  }
+
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    whereParams.studentId = req.user?._id;
+
+    const studentClasses = await ClassRegistration.find({
+      studentId,
+    });
+
+    const classIds = studentClasses.map((studentClass) => studentClass.classId);
+
+    if (
+      !!classId &&
+      classIds.findIndex((id) => id.toString() === classId) === -1
+    ) {
+      return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+    }
+  }
+
+  if (req.user?.role === USER_ROLE.TEACHER) {
+    const teacherClasses = await Class.find({
+      teacherId: req.user?._id,
+    });
+
+    const classIds = teacherClasses.map((teacherClass) => teacherClass._id);
+
+    if (
+      !!classId &&
+      classIds.findIndex((id) => id.toString() === classId) === -1
+    ) {
+      return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+    }
+
+    whereParams.classId = {
+      $in: classIds,
+    };
+  }
+
+  if (!!classId) {
+    whereParams.assessmentId = classId;
+  }
+
+  whereParams.studentAnswers = {
+    $elemMatch: {
+      regradeRequest: true,
+    },
+  };
+
+  whereParams.status = assessmentStatus.REGRADE_REQUESTED;
+
+  const assessmentSolutionsUpForRegrade = await applyPagination(
+    AssessmentSolution.find(whereParams)
+      .populate({
+        path: "studentId",
+        select: {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+        },
+      })
+      .populate({
+        path: "assessmentId",
+        select: {
+          _id: 1,
+          assessmentName: 1,
+          totalMarks: 1,
+        },
+        populate: {
+          path: "classId",
+          select: {
+            _id: 1,
+            className: 1,
+            courseCode: 1,
+          },
+        },
+      }),
+    req.query
+  );
+
+  const count = await AssessmentSolution.count(whereParams);
+
+  const regradeRequests = assessmentSolutionsUpForRegrade.map((solution) => ({
+    _id: solution._id,
+    studentId: solution.studentId?._id,
+    studentFirstName: solution.studentId?.firstName,
+    studentLastName: solution.studentId?.lastName,
+    classId: solution.assessmentId?.classId?._id,
+    className: solution.assessmentId?.classId?.className,
+    courseCode: solution.assessmentId?.classId?.courseCode,
+    assessmentName: solution.assessmentId?.assessmentName,
+    obtainedMarks: solution.obtainedMarks,
+    totalMarks: solution.assessmentId.totalMarks,
+  }));
+
+  return res.status(200).json({
+    success: true,
+    regradeRequests,
     count,
   });
 };
