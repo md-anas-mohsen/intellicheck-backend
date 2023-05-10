@@ -15,7 +15,7 @@ const {
   assessmentSolutionStatus,
   assessmentStatus,
 } = require("../constants/assessment");
-const { gradeSolution } = require("./aiService");
+const { gradeSolution } = require("./grading/gradingService");
 const { applyPagination } = require("../utils/generalHelpers");
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {

@@ -31,10 +31,6 @@ const questionSchema = mongoose.Schema({
       },
     ],
   ],
-  options: [
-    //for MCQs
-    { type: String, required: false },
-  ],
 });
 
 module.exports = mongoose.model("Question", questionSchema);
