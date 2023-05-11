@@ -6,45 +6,50 @@ const { boolean } = require("joi");
 const { ORDER_BY_DIRECTIONS } = require("../constants/common");
 const { USER_ROLE, userSettingsSchema } = require("../constants/user");
 
-const studentSchema = mongoose.Schema({
-  firstName: {
-    type: String,
-    required: [true, "Please provide first name"],
-    maxLength: [25, "Name cannot exceed 25 characters"],
+const studentSchema = mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      required: [true, "Please provide first name"],
+      maxLength: [25, "Name cannot exceed 25 characters"],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Please provide last name"],
+      maxLength: [25, "Name cannot exceed 25 characters"],
+    },
+    email: {
+      type: String,
+      required: [true, "Please enter your email"],
+      unique: true,
+      validate: [validator.isEmail, "Please enter valid email address"],
+    },
+    username: {
+      type: String,
+      unique: true,
+      required: [true, "Please provide username"],
+      maxLength: [10, "Name cannot exceed 10 characters"],
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: [6, "Password must be longer than 6 characters"],
+      select: false,
+    },
+    settings: userSettingsSchema,
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  lastName: {
-    type: String,
-    required: [true, "Please provide last name"],
-    maxLength: [25, "Name cannot exceed 25 characters"],
-  },
-  email: {
-    type: String,
-    required: [true, "Please enter your email"],
-    unique: true,
-    validate: [validator.isEmail, "Please enter valid email address"],
-  },
-  username: {
-    type: String,
-    unique: true,
-    required: [true, "Please provide username"],
-    maxLength: [10, "Name cannot exceed 10 characters"],
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: [6, "Password must be longer than 6 characters"],
-    select: false,
-  },
-  settings: userSettingsSchema,
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  deletedAt: {
-    type: Date,
-    default: null,
-  },
-});
+  {
+    toJSON: { virtuals: true },
+  }
+);
 
 studentSchema.pre("count", function () {
   this.where({ deletedAt: null });
@@ -150,5 +155,9 @@ studentSchema.statics.searchQuery = function (keyword, queryParams) {
 
   return this.find(query).sort(sortOrder);
 };
+
+studentSchema.virtual("role").get(function () {
+  return USER_ROLE.STUDENT;
+});
 
 module.exports = mongoose.model("Student", studentSchema);
