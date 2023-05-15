@@ -14,6 +14,12 @@ router.get(
   classService.getClasses
 );
 
+router.get(
+  "/add-multiple-students-template",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  classService.getAddMultipleStudentsToClassTemplate
+);
+
 router.post(
   "/create-class",
   isAuthenticatedUser(USER_ROLE.TEACHER),
