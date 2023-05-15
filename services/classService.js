@@ -1,5 +1,6 @@
 const Busboy = require("busboy");
 const csv = require("fast-csv");
+const mongoose = require("mongoose");
 
 const { setAuthToken, verifyRefreshToken } = require("../utils/authToken");
 const MESSAGES = require("../constants/messages");
@@ -500,3 +501,104 @@ exports.getAddMultipleStudentsToClassTemplate = catchAsyncErrors(
       .send(csvData);
   }
 );
+
+exports.getStudentScores = catchAsyncErrors(async (req, res, next) => {
+  const { classId } = req.params;
+  let { studentId } = req.query;
+
+  switch (req.user?.role) {
+    case USER_ROLE.TEACHER: {
+      if (!studentId) {
+        return next(new ErrorHandler(MESSAGES.STUDENT_ID_NOT_SPECIFIED, 400));
+      }
+
+      const studentIsTaughtByTeacher = await ClassRegistration.findOne({
+        classId,
+        studentId,
+      });
+
+      if (!studentIsTaughtByTeacher) {
+        return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+      }
+
+      studentId = mongoose.Types.ObjectId(studentId);
+
+      break;
+    }
+    case USER_ROLE.STUDENT: {
+      studentId = req.user?._id;
+      break;
+    }
+  }
+
+  let [solvedAssessments, count, totalObtainedMarks, totalAvailableMarks] =
+    await Promise.all([
+      applyPagination(
+        AssessmentSolution.find({
+          studentId,
+        })
+          .populate({
+            path: "assessmentId",
+            select: "_id assessmentName totalMarks",
+          })
+          .select("_id assessmentId obtainedMarks status"),
+        req.query
+      ),
+      AssessmentSolution.count({
+        studentId,
+      }),
+      AssessmentSolution.aggregate([
+        {
+          $match: {
+            studentId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalObtainedMarks: { $sum: "$obtainedMarks" },
+          },
+        },
+      ]),
+      AssessmentSolution.aggregate([
+        {
+          $lookup: {
+            from: "assessments",
+            localField: "assessmentId",
+            foreignField: "_id",
+            as: "assessment",
+          },
+        },
+        {
+          $unwind: "$assessment",
+        },
+        {
+          $match: {
+            studentId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalAvailableMarks: { $sum: "$assessment.totalMarks" },
+          },
+        },
+      ]),
+    ]);
+
+  solvedAssessments = solvedAssessments.map((solution) => ({
+    _id: solution._id,
+    assessmentId: solution.assessmentId?._id,
+    assessmentName: solution.assessmentId?.assessmentName,
+    obtainedMarks: solution.obtainedMarks,
+    totalMarks: solution.assessmentId?.totalMarks,
+    status: solution.status,
+  }));
+
+  return res.status(200).json({
+    totalObtainedMarks: totalObtainedMarks[0]?.totalObtainedMarks || null,
+    totalAvailableMarks: totalAvailableMarks[0]?.totalAvailableMarks || null,
+    solvedAssessments,
+    count,
+  });
+});

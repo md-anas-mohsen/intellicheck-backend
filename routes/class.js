@@ -15,6 +15,12 @@ router.get(
 );
 
 router.get(
+  "/get-student-scores/:classId",
+  isAuthenticatedUser(),
+  classService.getStudentScores
+);
+
+router.get(
   "/add-multiple-students-template",
   isAuthenticatedUser(USER_ROLE.TEACHER),
   classService.getAddMultipleStudentsToClassTemplate

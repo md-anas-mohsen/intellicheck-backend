@@ -10,6 +10,6 @@ const connectDB = mongoose
       )
     );
   })
-  .catch((err) => chalk.bgRed(err));
+  .catch((err) => console.log(chalk.bgRed(err)));
 
 module.exports = connectDB;
