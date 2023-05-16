@@ -44,11 +44,11 @@ app.use("/api/course", courses);
 // app.use(logger);
 
 app.get("/", async (req, res) => {
-  await enqueueTestJob();
+  // await enqueueTestJob();
 
   res.status(200).json({
     success: true,
-    message: "API - RapidCheck",
+    message: "Welcome to the RapidCheck API",
   });
 });
 
