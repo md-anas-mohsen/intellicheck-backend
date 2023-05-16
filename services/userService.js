@@ -18,6 +18,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const Token = require("../models/token");
 const { TOKEN_TYPE, PASSCODE_LENGTH } = require("../constants/token");
 const sendEmail = require("../utils/sendEmail");
+const { enqueueEmail } = require("../utils/queueHelper");
 
 const crypto = require("crypto");
 
@@ -366,11 +367,17 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     }),
   ]);
 
-  sendEmail({
+  await enqueueEmail({
     email,
     subject: `RapidCheck | OTP`,
     message: `<p>Here is your OTP</p> <h1>${code}</h1>`,
   });
+
+  // sendEmail({
+  //   email,
+  //   subject: `RapidCheck | OTP`,
+  //   message: `<p>Here is your OTP</p> <h1>${code}</h1>`,
+  // });
 
   return res.status(200).json({
     token: token.tokenHash,

@@ -13,6 +13,8 @@ const courses = require("./routes/course");
 const errorMiddleware = require("./middlewares/errors");
 const logErrorMiddleware = require("./middlewares/logErrors");
 
+const { enqueueTestJob } = require("./utils/queueHelper");
+
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 
 app.use(express.json());
@@ -41,7 +43,9 @@ app.use("/api/course", courses);
 
 // app.use(logger);
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
+  await enqueueTestJob();
+
   res.status(200).json({
     success: true,
     message: "API - RapidCheck",
