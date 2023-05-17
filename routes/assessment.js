@@ -66,4 +66,10 @@ router.get(
   assessmentService.getRegradeRequestsListing
 );
 
+router.post(
+  "/ai-grade-assessment/:assessmentSolutionId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  assessmentService.gradeAssesmentWithAI
+);
+
 module.exports = router;

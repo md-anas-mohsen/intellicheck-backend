@@ -16,7 +16,22 @@ taskQueue.on("connected", () => {
 });
 
 exports.enqueueEmail = async ({ email, subject, message }) => {
-  await taskQueue.add(QUEUE_JOBS.EMAIL, { email, subject, message });
+  await taskQueue.add(
+    QUEUE_JOBS.EMAIL,
+    { email, subject, message },
+    { removeOnComplete: true }
+  );
+};
+
+exports.enqueueAssessmentSolutionAIGrading = async ({ assessmentSolution }) => {
+  await taskQueue.add(
+    QUEUE_JOBS.GRADE_SOLUTION,
+    { assessmentSolution },
+    {
+      removeOnComplete: true,
+      attempts: 5,
+    }
+  );
 };
 
 exports.enqueueTestJob = async () => {

@@ -17,6 +17,7 @@ const {
 } = require("../constants/assessment");
 const { gradeSolution } = require("./grading/gradingService");
 const { applyPagination } = require("../utils/generalHelpers");
+const { enqueueAssessmentSolutionAIGrading } = require("../utils/queueHelper");
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -242,7 +243,9 @@ exports.submitAssessment = catchAsyncErrors(async (req, res, next) => {
   });
 
   //TODO: Invoke AI to grade submission
-  await gradeSolution(solution);
+  // await gradeSolution(solution);
+
+  await enqueueAssessmentSolutionAIGrading({ assessmentSolution: solution });
 
   return res.status(201).json({
     message: MESSAGES.ASSESSMENT_SUBMITTED_SUCCESS,
@@ -857,5 +860,36 @@ exports.getRegradeRequestsListing = async (req, res, next) => {
     success: true,
     regradeRequests,
     count,
+  });
+};
+
+exports.gradeAssesmentWithAI = async (req, res) => {
+  const { assessmentSolutionId } = req.params;
+
+  const assessmentSolution = await AssessmentSolution.findOne({
+    _id: assessmentSolutionId,
+  }).populate({ path: "assessmentId", populate: { path: "classId" } });
+
+  if (!assessmentSolution) {
+    return next(new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_NOT_FOUND, 404));
+  }
+
+  const classTeacherId = assessmentSolution.assessmentId?.classId?.teacherId;
+
+  if (req.user?._id !== classTeacherId) {
+    return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+  }
+
+  if (assessmentSolution.status !== assessmentSolutionStatus.UNGRADED) {
+    return next(
+      new ErrorHandler(MESSAGES.ASSESSMENT_SOLUTION_ALREADY_GRADED, 400)
+    );
+  }
+
+  await enqueueAssessmentSolutionAIGrading({ assessmentSolution });
+
+  return res.status(202).json({
+    success: true,
+    message: MESSAGES.ASSESSMENT_SOLUTION_GRADING_ENQUEUED,
   });
 };

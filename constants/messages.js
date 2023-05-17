@@ -72,6 +72,10 @@ const MESSAGES = {
   AI_GRADING_SERVICE_URL_NOT_PROVIDED:
     "AI grading service URL is not present in the environment, please add it to enable grading of descriptive questions",
   STUDENT_ID_NOT_SPECIFIED: "Please specify the student id",
+  ASSESSMENT_SOLUTION_ALREADY_GRADED:
+    "This assessment solution has been already graded",
+  ASSESSMENT_SOLUTION_GRADING_ENQUEUED:
+    "This assessment solution has been queued for grading",
 };
 
 module.exports = MESSAGES;
