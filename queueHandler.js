@@ -1,10 +1,26 @@
 require("dotenv").config({ path: "./.env" });
+require("./config/database");
+
 const { Worker } = require("bullmq");
 const chalk = require("chalk");
 
 const { QUEUE_NAMES, QUEUE_CONFIG, QUEUE_JOBS } = require("./constants/queue");
 
+const { gradeSolution } = require("./services/grading/gradingService");
 const sendEmail = require("./utils/sendEmail");
+
+const Assessment = require("./models/assessment");
+const AssessmentSolution = require("./models/assessmentSolution");
+const Course = require("./models/course");
+const Class = require("./models/class");
+const Announcement = require("./models/announcement");
+const Question = require("./models/question");
+const Teacher = require("./models/teacher");
+const Student = require("./models/student");
+const ClassRegistration = require("./models/classRegistration");
+const DeviceSession = require("./models/deviceSession");
+const StudentRegistrationRequest = require("./models/studentRegistrationRequest");
+const Token = require("./models/token");
 
 const worker = new Worker(
   QUEUE_NAMES.TASK_QUEUE,
@@ -13,10 +29,11 @@ const worker = new Worker(
 
     switch (JOB_TYPE) {
       case QUEUE_JOBS.EMAIL: {
-        handleEmailQueueJob(job.data);
+        await handleEmailQueueJob(job.data);
         break;
       }
       case QUEUE_JOBS.GRADE_SOLUTION: {
+        await handleGradeSolutionQueueJob(job.data);
         break;
       }
       case QUEUE_JOBS.NOTIFICATION: {
@@ -38,6 +55,16 @@ const handleEmailQueueJob = async ({ email, subject, message }) => {
     subject,
     message,
   });
+};
+
+const handleGradeSolutionQueueJob = async ({ assessmentSolution }) => {
+  console.log(
+    chalk.bgCyanBright(
+      `[INFO] ASSESSMENT SOLUTION ${assessmentSolution._id} ENQUEUED FOR GRADING`
+    )
+  );
+
+  await gradeSolution(assessmentSolution);
 };
 
 worker.on("completed", (job, returnvalue) => {
