@@ -18,7 +18,9 @@ exports.isAuthenticatedUser = (roles) => {
       }
     }
 
-    const { authorization } = req.cookies;
+    // const { authorization } = req.cookies;
+    let { authorization } = req.headers;
+    authorization = authorization?.split(" ")[1];
 
     if (!authorization) {
       return res.status(401).json({
