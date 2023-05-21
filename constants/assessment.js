@@ -20,3 +20,8 @@ exports.assessmentStatus = {
   CANCELLED: "CANCELLED",
   REGRADE_REQUESTED: "REGRADE_REQUESTED",
 };
+
+exports.solutionGradingType = {
+  AI_GRADING: "AI_GRADING",
+  MANUAL_GRADING: "MANUAL_GRADING",
+};
