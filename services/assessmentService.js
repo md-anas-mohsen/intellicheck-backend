@@ -14,6 +14,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const {
   assessmentSolutionStatus,
   assessmentStatus,
+  questionType,
 } = require("../constants/assessment");
 const { gradeSolution } = require("./grading/gradingService");
 const { applyPagination } = require("../utils/generalHelpers");
@@ -174,10 +175,21 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
   }).select("-assessmentId");
 
   if (req.user?.role === USER_ROLE.STUDENT) {
-    assessmentQuestionsQuery = assessmentQuestionsQuery.select("-msAnswer");
+    assessmentQuestionsQuery = assessmentQuestionsQuery;
   }
 
   questions = await assessmentQuestionsQuery;
+  questions = questions.map((question) => {
+    if (
+      req.user?.role === USER_ROLE.STUDENT &&
+      question.questionType !== questionType.MCQ
+    ) {
+      question.msAnswer = undefined;
+      return question;
+    }
+
+    return question;
+  });
 
   let studentAnswers = assessmentSolution?.studentAnswers;
 
