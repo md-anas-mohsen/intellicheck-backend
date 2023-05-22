@@ -336,6 +336,44 @@ exports.getClassStudents = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+exports.getClassUnregisterdStudents = catchAsyncErrors(async (req, res, next) => {
+  const classId = req.params.classId;
+  const teacherId = req.user._id;
+  const { keyword } = req.query;
+
+  const teacherHasClass = await Class.findOne({
+    teacherId,
+    _id: classId,
+  });
+
+  if (!teacherHasClass) {
+    return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
+  }
+
+  const whereParams = {
+    classId: classId,
+    ...(!!keyword && {
+      $or: [
+        {
+          email: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    }),
+  };
+
+  const UnregisteredStudents = await applyPagination(StudentRegistrationRequest.find(whereParams), req.query);
+  const count = await StudentRegistrationRequest.count(whereParams);
+
+  return res.status(200).json({
+    success: true,
+    UnregisteredStudents,
+    count,
+  });
+});
+
 exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
   const { classId } = req.params;
   const { studentId } = req.params;
@@ -367,6 +405,32 @@ exports.removeStudent = catchAsyncErrors(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: MESSAGES.STUDENT_REMOVED_FROM_CLASS,
+  });
+});
+
+
+exports.removeUnregisteredStudent = catchAsyncErrors(async (req, res, next) => {
+  const { classId } = req.params;
+  const { email } = req.params;
+  
+
+  const teacherHasClass = await Class.findOne({
+    _id: classId,
+    teacherId: req.user?._id,
+  });
+
+  if (!teacherHasClass) {
+    return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
+  }
+
+  await StudentRegistrationRequest.deleteOne({
+    email: email,
+    classId: classId,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: MESSAGES.UNREGISTERED_STUDENT_REMOVED_FROM_CLASS,
   });
 });
 

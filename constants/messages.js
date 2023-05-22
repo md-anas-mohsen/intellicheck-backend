@@ -10,7 +10,7 @@ const MESSAGES = {
   USER_CREATION_SUCCESS: "User created successfully",
   CLASS_CREATION_SUCCESS: "Class created successfully",
   ANNOUNCEMENT_CREATION_SUCCESS: "Announcement created successfully",
-  ANNOUCEMENTs_FETCHED: "Annoucments fetched successfully",
+  ANNOUCEMENTS_FETCHED: "Annoucments fetched successfully",
   LOGIN_REQUIRED: "Login to view resource",
   NOT_FOUND: "Not found",
   UPDATED: "Updated",
@@ -39,6 +39,7 @@ const MESSAGES = {
   CLASS_DETAIL_FETCHED: "Class details fetched successfully",
   CLASS_UPDATED: "Class updated successfully",
   STUDENT_REMOVED_FROM_CLASS: "Student removed from Class successfully",
+  UNREGISTERED_STUDENT_REMOVED_FROM_CLASS: "Unregistered Student removed from Class list",
   ASSESSMENT_WITH_SAME_NAME: "Assessment with same name already exists",
   ASSESSMENT_DUE_DATE_BEHIND_OPEN_DATE:
     "Assessment due date must be ahead of open date",
@@ -55,8 +56,6 @@ const MESSAGES = {
   ASSESSMENT_SOLUTION_NOT_FOUND: "Assessment solution not found",
   ASSESSMENT_QUESTION_NOT_GRADED: "One or more questions are not graded",
   ASSESSMENT_DELETED: "Assessment deleted successfully",
-  ASSESSMENT_CANNOT_VIEW_FOR_THIS_CLASS:
-    "You cannot view assessments for this class",
   INVALID_OTP: "Invalid OTP entered",
   INVALID_TOKEN: "Request is invalid or expired",
   PASSWORDS_DONOT_MATCH: "Passwords donot match",
@@ -64,18 +63,6 @@ const MESSAGES = {
   PROFILE_UPDATED: "Profile updated successfully",
   USERNAME_ALREADY_TAKEN: "Username has been already used",
   SETTINGS_UPDATED: "Settings updated successfully",
-  FORBIDDEN: "FORBIDDEN",
-  REGRADE_REQUEST_SUBMITTED: "Regrade request submitted",
-  REGRADE_REQUEST_ONLY_ON_GRADED_ASSESSMENT:
-    "Assessment is not graded, regrade request cannot be submitted",
-  CANNOT_INSTANTIATE_ABSTRACT_CLASS: "Cannot instantiate abstract class",
-  AI_GRADING_SERVICE_URL_NOT_PROVIDED:
-    "AI grading service URL is not present in the environment, please add it to enable grading of descriptive questions",
-  STUDENT_ID_NOT_SPECIFIED: "Please specify the student id",
-  ASSESSMENT_SOLUTION_ALREADY_GRADED:
-    "This assessment solution has been already graded",
-  ASSESSMENT_SOLUTION_GRADING_ENQUEUED:
-    "This assessment solution has been queued for grading",
 };
 
 module.exports = MESSAGES;

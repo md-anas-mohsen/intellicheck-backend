@@ -79,10 +79,23 @@ router.get(
   classService.getClassStudents
 );
 
+router.get(
+  "/get-unregistered-students/:classId",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  validator.query(classValidatorSchema.getClassStudentsRequestModel),
+  classService.getClassUnregisteredStudents
+);
+
 router.delete(
   "/remove-student/:classId/:studentId",
   isAuthenticatedUser(USER_ROLE.TEACHER),
   classService.removeStudent
+);
+
+router.delete(
+  "/remove-unregistered-student/:classId/:email",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  classService.removeUnregisteredStudent
 );
 
 module.exports = router;
