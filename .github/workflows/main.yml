@@ -13,10 +13,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
+        
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -25,4 +22,4 @@ jobs:
 
       - name: Connect to VM and execute commands
         run: |
-          SSHPASS="${{ secrets.SSH_PRIVATE_KEY_PASSPHRASE }}" sshpass -v -e -P 'Password authentication' ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_VM_USER }}@${{ secrets.SSH_VM_IP }} "cd /rapidcheck-backend && git pull && cd .. && docker compose down -v && docker compose up -d"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_VM_USER }}@${{ secrets.SSH_VM_IP }} "cd /rapidcheck-backend && git pull && cd .. && docker compose down -v && docker compose up -d"
