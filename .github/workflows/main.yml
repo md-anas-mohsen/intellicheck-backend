@@ -25,4 +25,4 @@ jobs:
 
       - name: Connect to VM and execute commands
         run: |
-          /usr/bin/sshpass -v -p "${{ secrets.SSH_PRIVATE_KEY_PASSPHRASE }}" ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_VM_USER }}@${{ secrets.SSH_VM_IP }} "cd /rapidcheck-backend && git pull && cd .. && docker compose down -v && docker compose up -d"
+          SSHPASS="${{ secrets.SSH_PRIVATE_KEY_PASSPHRASE }}" sshpass -v -e -P 'Password authentication' ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_VM_USER }}@${{ secrets.SSH_VM_IP }} "cd /rapidcheck-backend && git pull && cd .. && docker compose down -v && docker compose up -d"
