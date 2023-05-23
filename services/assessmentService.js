@@ -125,8 +125,6 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: MESSAGES.ASSESSMENT_CREATED,
-      assessment,
-      questions: questionsCreated,
     });
   } catch (err) {
     return next(err);
