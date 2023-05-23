@@ -568,39 +568,30 @@ exports.viewStudentAnnouncements = catchAsyncErrors(async (req, res, next) => {
       }),
     };
 
-    const announcements = await applyPagination(
-      Announcement.aggregate([
-        {
-          $match: whereParams,
-        },
-        {
-          $lookup: {
-            from: "classRegistrations",
-            localField: "classId",
-            foreignField: "classId",
-            as: "classInfo",
-          },
-        },
-        {
-          $lookup: {
-            from: "classes",
-            localField: "classId",
-            foreignField: "_id",
-            as: "classData",
-          },
-        },
-        {
-          $project: {
-            title: 1,
-            description: 1,
-            _id: 1,
-            className: { $arrayElemAt: ["$classData.className", 0] },
-          },
-        },
-      ]),
+    const classMap = new Map();
+    const classIdsArray = [...new Set(classIds)];
+    
+    const classData = await Class.find(
+      { _id: { $in: classIdsArray } },
+      { _id: 1, className: 1 }
+    );
+    
+    classData.forEach((classItem) => {
+      classMap.set(classItem._id.toString(), classItem.className);
+    });
+    
+    const announcements_wo_class = await applyPagination(
+      Announcement.find(whereParams, "title description _id classId"),
       req.query
     );
-  
+    
+    // Map the className based on classId
+    const announcements = announcements_wo_class.map((announcement) => {
+      return {
+        ...announcement._doc,
+        className: classMap.get(announcement.classId.toString()),
+      };
+    });
   
     const count = await Announcement.count(whereParams);
 
