@@ -714,6 +714,7 @@ exports.getAssessmentListing = async (req, res, next) => {
         dueDateTimestamp + solution.assessmentId?.duration
       ) {
         totalObtainedMarks += solution.obtainedMarks;
+        totalAvailableMarks += solution.assessmentId?.totalMarks;
       }
     });
   }
@@ -735,7 +736,7 @@ exports.getAssessmentListing = async (req, res, next) => {
         } else if (!!attempted[assessment._id]) {
           status = assessmentStatus.GRADED;
           assessment.obtainedMarks = attempted[assessment._id].obtainedMarks;
-          totalAvailableMarks += assessment.totalMarks;
+          // totalAvailableMarks += assessment.totalMarks;
 
           if (attempted[assessment._id].regradeRequest) {
             status = assessmentStatus.REGRADE_REQUESTED;

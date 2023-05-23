@@ -22,6 +22,6 @@ exports.assessmentStatus = {
 };
 
 exports.solutionGradingType = {
-  AI_GRADING: "AI GRADING",
-  MANUAL_GRADING: "MANUAL GRADING",
+  AI_GRADING: "AI_GRADING",
+  MANUAL_GRADING: "MANUAL_GRADING",
 };
