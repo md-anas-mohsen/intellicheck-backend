@@ -685,18 +685,38 @@ exports.getAssessmentListing = async (req, res, next) => {
   let attempted = {};
   let totalObtainedMarks = 0;
   let totalAvailableMarks = 0;
+  let currentTimestamp = Date.now();
+
   if (req.user?.role === USER_ROLE.STUDENT) {
-    const attemptedAssessments = await AssessmentSolution.find({
+    let attemptedAssessments = await AssessmentSolution.find({
       studentId: req.user?._id,
-    });
+    })
+      .populate({
+        path: "assessmentId",
+        ...(!!classId && { match: { classId } }),
+      })
+      .exec();
+
+    attemptedAssessments = attemptedAssessments.filter(
+      (attemptedAssessment) => !!attemptedAssessment.assessmentId
+    );
 
     attemptedAssessments.forEach((solution) => {
-      attempted[solution.assessmentId] = {
+      attempted[solution.assessmentId._id] = {
         obtainedMarks: solution.obtainedMarks,
+        totalMarks: solution.assessmentId?.totalMarks,
         regradeRequest:
           solution.status === assessmentSolutionStatus.REGRADE_REQUESTED,
       };
-      totalObtainedMarks += solution.obtainedMarks;
+
+      let dueDateTimestamp = new Date(solution.assessmentId?.dueDate).getTime();
+
+      if (
+        currentTimestamp >=
+        dueDateTimestamp + solution.assessmentId?.duration
+      ) {
+        totalObtainedMarks += solution.obtainedMarks;
+      }
     });
   }
 
@@ -704,7 +724,6 @@ exports.getAssessmentListing = async (req, res, next) => {
   assessments = assessments.map((assessment) => {
     status = "";
 
-    let currentTimestamp = Date.now();
     let dueDateTimestamp = new Date(assessment.dueDate).getTime();
     let openDateTimestamp = new Date(assessment.openDate).getTime();
 
