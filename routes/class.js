@@ -50,7 +50,7 @@ router.post(
 router.get(
   "/view-annoucements/:classId",
   validator.query(announcementValidatorSchema.viewAnnouncementsRequestModel),
-  classService.getClassStudents
+  classService.viewAnnouncements
 );
 
 router.post(
