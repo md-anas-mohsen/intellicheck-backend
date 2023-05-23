@@ -7,7 +7,7 @@ exports.questionType = {
 exports.assessmentSolutionStatus = {
   UNGRADED: "UNGRADED",
   GRADED: "GRADED",
-  REGRADE_REQUESTED: "REGRADE_REQUESTED",
+  REGRADE_REQUESTED: "REGRADE REQUESTED",
 };
 
 exports.assessmentStatus = {
@@ -18,10 +18,10 @@ exports.assessmentStatus = {
   UNGRADED: "UNGRADED",
   GRADED: "GRADED",
   CANCELLED: "CANCELLED",
-  REGRADE_REQUESTED: "REGRADE_REQUESTED",
+  REGRADE_REQUESTED: "REGRADE REQUESTED",
 };
 
 exports.solutionGradingType = {
-  AI_GRADING: "AI_GRADING",
-  MANUAL_GRADING: "MANUAL_GRADING",
+  AI_GRADING: "AI GRADING",
+  MANUAL_GRADING: "MANUAL GRADING",
 };
