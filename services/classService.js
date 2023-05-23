@@ -542,75 +542,67 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
 exports.viewStudentAnnouncements = catchAsyncErrors(async (req, res, next) => {
   const { keyword } = req.query;
 
-  if (req.user?.role === USER_ROLE.STUDENT) {
-    const studentClasses = await ClassRegistration.find({
-      studentId: req.user?._id,
-    });
+  const studentClasses = await ClassRegistration.find({
+    studentId: req.user?._id,
+  });
 
-    classIds = studentClasses.map((userClass) => userClass.classId);
+  classIds = studentClasses.map((userClass) => userClass.classId);
 
-    const whereParams = {
-      classId: {$in: classIds},
-      ...(!!keyword && {
-        $or: [
-          {
-            description: {
-              $regex: keyword,
-              $options: "i",
-            },
+  const whereParams = {
+    classId: { $in: classIds },
+    ...(!!keyword && {
+      $or: [
+        {
+          description: {
+            $regex: keyword,
+            $options: "i",
           },
-          {
-            title: {
-              $regex: keyword,
-              $options: "i",
-            },
+        },
+        {
+          title: {
+            $regex: keyword,
+            $options: "i",
           },
-        ],
-      }),
-    };
+        },
+      ],
+    }),
+  };
 
-    const classMap = new Map();
-    const classIdsArray = [...new Set(classIds)];
-    
-    //const classData = await Class.find(
-    //  { _id: { $in: classIdsArray } },
-    //  { _id: 1, className: 1 }
-    //);
-    
-    //classData.forEach((classItem) => {
-    //  classMap.set(classItem._id.toString(), classItem.className);
-    //});
-    
-    const announcements_wo_class = await applyPagination(
-      Announcement.find(whereParams, "title description _id classId"),
-      req.query
-    );
-    
-    // Map the className based on classId
-    //const announcements = announcements_wo_class.map((announcement) => {
-    //  return {
-    //    ...announcement._doc,
-    //    className: classMap.get(announcement.classId.toString()),
-    //  };
-    //});
-  
-    //const count = await Announcement.count(whereParams);
+  const classMap = new Map();
+  const classIdsArray = [...new Set(classIds)];
 
-    return res.status(200).json({
-      success: true,
-      //announcements,
-      announcements_wo_class,
-      count,
-    });
+  //const classData = await Class.find(
+  //  { _id: { $in: classIdsArray } },
+  //  { _id: 1, className: 1 }
+  //);
 
-  }
+  //classData.forEach((classItem) => {
+  //  classMap.set(classItem._id.toString(), classItem.className);
+  //});
 
+  const announcements_wo_class = await applyPagination(
+    Announcement.find(whereParams, "title description _id classId").populate({
+      path: "classId",
+    }),
+    req.query
+  );
 
-  else {
-    return next(new ErrorHandler(MESSAGES.CANNOT_GET_ANNOUNCEMENTS, 403));
+  // Map the className based on classId
+  //const announcements = announcements_wo_class.map((announcement) => {
+  //  return {
+  //    ...announcement._doc,
+  //    className: classMap.get(announcement.classId.toString()),
+  //  };
+  //});
 
-  }
+  const count = await Announcement.count(whereParams);
 
+  return res.status(200).json({
+    success: true,
+    //announcements,
+    announcements_wo_class,
+    count,
+  });
 });
 
 exports.getClasses = catchAsyncErrors(async (req, res, next) => {

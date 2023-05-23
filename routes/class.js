@@ -49,12 +49,14 @@ router.post(
 
 router.get(
   "/view-announcements/:classId",
+  isAuthenticatedUser(),
   validator.query(announcementValidatorSchema.viewAnnouncementsRequestModel),
   classService.viewAnnouncements
 );
 
 router.get(
   "/view-student-announcements",
+  isAuthenticatedUser(USER_ROLE.STUDENT),
   validator.query(announcementValidatorSchema.viewAnnouncementsRequestModel),
   classService.viewStudentAnnouncements
 );
