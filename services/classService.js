@@ -24,9 +24,12 @@ const { applyPagination } = require("../utils/generalHelpers");
 const { readCSV2JSON } = require("../utils/fileHelper");
 const classRegistration = require("../models/classRegistration");
 const { USER_ROLE } = require("../constants/user");
-const { studentEvents } = require("../constants/events");
+const { studentEvents, classEvents } = require("../constants/events");
 const { enqueueEmail } = require("../utils/queueHelper");
 const registrationRequestEmailTemplate = require("../utils/email/templates/registrationRequestEmail");
+const {
+  announcementPostedNotification,
+} = require("../events/announcementEvents");
 
 const registrationRequestNotificationHandler = async ({
   teacherName,
@@ -43,6 +46,11 @@ const registrationRequestNotificationHandler = async ({
 eventEmitter.addListener(
   studentEvents.STUDENT_REGISTRATION_REQUEST_NOTIFICATION,
   registrationRequestNotificationHandler
+);
+
+eventEmitter.addListener(
+  classEvents.ANNOUNCEMENT_POSTED,
+  announcementPostedNotification
 );
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
@@ -125,6 +133,12 @@ exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
     classId,
     description,
     title,
+  });
+
+  eventEmitter.emit(classEvents.ANNOUNCEMENT_POSTED, {
+    announcement,
+    teacherName: `${req.user?.firstName} ${req.user?.lastName}`,
+    classId,
   });
 
   return res.status(200).json({
