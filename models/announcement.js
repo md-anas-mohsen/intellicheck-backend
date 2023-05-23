@@ -12,9 +12,8 @@ const announcementSchema = mongoose.Schema({
   },
   title: {
     type: String,
-    required: [true, "Provide class name"],
+    required: [true, "Provide title"],
     maxLength: [25, "Cannot exceed 25 characters"],
-    unique: true,
   },
   createdAt: {
     type: Date,

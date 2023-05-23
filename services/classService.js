@@ -93,11 +93,11 @@ exports.postAnnouncement = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler(MESSAGES.TEACHER_CLASS_NOT_FOUND, 403));
   }
 
-  const existingTitle = await Announcement.findOne({ title: title });
+  // const existingTitle = await Announcement.findOne({ title: title });
 
-  if (existingTitle) {
-    return next("Title not available", 409);
-  }
+  // if (existingTitle) {
+  //   return next(new ErrorHandler("Title not available", 409));
+  // }
 
   const announcement = await Announcement.create({
     classId,
