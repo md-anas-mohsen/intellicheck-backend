@@ -17,10 +17,29 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorHandler");
 const Token = require("../models/token");
 const { TOKEN_TYPE, PASSCODE_LENGTH } = require("../constants/token");
-const sendEmail = require("../utils/sendEmail");
+// const sendEmail = require("../utils/sendEmail");
 const { enqueueEmail } = require("../utils/queueHelper");
 
 const crypto = require("crypto");
+const events = require("events");
+const forgotPasswordOTPEmailTemplate = require("../utils/email/templates/forgotPasswordOTPEmail");
+const { userEvents } = require("../constants/events");
+const eventEmitter = new events.EventEmitter();
+
+const otpCodeNotification = async ({ code, email }) => {
+  await enqueueEmail({
+    email,
+    subject: "RapidCheck | Forgot Password",
+    message: forgotPasswordOTPEmailTemplate({
+      code,
+    }),
+  });
+};
+
+eventEmitter.addListener(
+  userEvents.FORGOT_PASSWORD_OTP_REQUEST_NOTIFICATION,
+  otpCodeNotification
+);
 
 const findTeacherOrStudent = async (role, whereParams) => {
   try {
@@ -367,17 +386,10 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     }),
   ]);
 
-  await enqueueEmail({
+  eventEmitter.emit(userEvents.FORGOT_PASSWORD_OTP_REQUEST_NOTIFICATION, {
+    code,
     email,
-    subject: `RapidCheck | OTP`,
-    message: `<p>Here is your OTP</p> <h1>${code}</h1>`,
   });
-
-  // sendEmail({
-  //   email,
-  //   subject: `RapidCheck | OTP`,
-  //   message: `<p>Here is your OTP</p> <h1>${code}</h1>`,
-  // });
 
   return res.status(200).json({
     token: token.tokenHash,

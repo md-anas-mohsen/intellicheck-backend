@@ -7,9 +7,22 @@ const {
   questionType,
   solutionGradingType,
 } = require("../../constants/assessment");
-const assessmentSolution = require("../../models/assessmentSolution");
+const { enqueueEmail } = require("../../utils/queueHelper");
+const assessmentGradedEmailTemplate = require("../../utils/email/templates/assessmentGradedEmail");
 
 const questionGradingFactory = new QuestionGradingStrategyFactory();
+
+const events = require("events");
+const { assessmentEvents } = require("../../constants/events");
+const {
+  assessmentGradedNotification,
+} = require("../../events/assessmentEvents");
+const eventEmitter = new events.EventEmitter();
+
+eventEmitter.addListener(
+  assessmentEvents.ASSESSMENT_GRADED_NOTIFICATION,
+  assessmentGradedNotification
+);
 
 class GradingTypeFactory {
   #course;
@@ -34,10 +47,14 @@ class GradingTypeFactory {
   }
 
   async #aiGrading() {
-    console.log("AI GRADING HAPPENING");
+    console.log("AI GRADING IN PROGRESS");
     this.#assessmentSolution = await this.#gradeQuestions();
     this.#assessmentSolution.status = "GRADED";
     await this.#assessmentSolution.save();
+
+    eventEmitter.emit(assessmentEvents.ASSESSMENT_GRADED_NOTIFICATION, {
+      assessmentSolution: this.#assessmentSolution,
+    });
   }
 
   async #manualGrading() {
@@ -109,6 +126,13 @@ exports.gradeSolution = async (assessmentSolution) => {
     .populate({
       path: "studentAnswers",
       populate: { path: "question", model: "Question" },
+    })
+    .populate({
+      path: "studentId",
+    })
+    .populate({
+      path: "assessmentId",
+      populate: { path: "classId", model: "Class" },
     })
     .exec();
 

@@ -16,9 +16,35 @@ const {
   assessmentStatus,
   questionType,
 } = require("../constants/assessment");
-const { gradeSolution } = require("./grading/gradingService");
+
+require("../events/assessmentEvents");
+
 const { applyPagination } = require("../utils/generalHelpers");
 const { enqueueAssessmentSolutionAIGrading } = require("../utils/queueHelper");
+const { assessmentEvents } = require("../constants/events");
+
+const { EventEmitter } = require("events");
+const {
+  assessmentRegradedNotification,
+  assessmentGradedNotification,
+  assessmentCreatedNotification,
+} = require("../events/assessmentEvents");
+const eventEmitter = new EventEmitter();
+
+eventEmitter.addListener(
+  assessmentEvents.ASSESSMENT_CREATED_NOTIFICATION,
+  assessmentCreatedNotification
+);
+
+eventEmitter.addListener(
+  assessmentEvents.ASSESSMENT_REGRADED_NOTIFICATION,
+  assessmentRegradedNotification
+);
+
+eventEmitter.addListener(
+  assessmentEvents.ASSESSMENT_GRADED_NOTIFICATION,
+  assessmentGradedNotification
+);
 
 exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -91,6 +117,11 @@ exports.createAssessment = catchAsyncErrors(async (req, res, next) => {
     });
     session.endSession();
 
+    eventEmitter.emit(assessmentEvents.ASSESSMENT_CREATED_NOTIFICATION, {
+      teacherClass: teacherHasClass,
+      assessment,
+    });
+
     return res.status(201).json({
       success: true,
       message: MESSAGES.ASSESSMENT_CREATED,
@@ -112,13 +143,6 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
   }
 
   let assessmentSolution;
-
-  if (
-    Date.now() <
-    new Date(assessment.dueDate).getTime() + assessment.duration
-  ) {
-    return next(new ErrorHandler(MESSAGES.ASSESSMENT_GRADING_PROCESS, 403));
-  }
 
   if (req.user?.role === USER_ROLE.STUDENT) {
     const userEnrolledInThisClass = await ClassRegistration.findOne({
@@ -150,6 +174,13 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
         },
       })
       .exec();
+
+    if (
+      Date.now() <
+      new Date(assessment.dueDate).getTime() + assessment.duration
+    ) {
+      return next(new ErrorHandler(MESSAGES.ASSESSMENT_GRADING_PROCESS, 403));
+    }
 
     if (
       assessmentSolution &&
@@ -459,6 +490,13 @@ exports.manuallyGradeAssessment = catchAsyncErrors(async (req, res, next) => {
       path: "studentAnswers",
       populate: { path: "question", model: "Question" },
     })
+    .populate({
+      path: "studentId",
+    })
+    .populate({
+      path: "assessmentId",
+      populate: { path: "classId", model: "Class" },
+    })
     .exec();
 
   if (!assessmentSolution) {
@@ -493,6 +531,18 @@ exports.manuallyGradeAssessment = catchAsyncErrors(async (req, res, next) => {
       marksObtained += marking[answer.question._id];
     }
   });
+
+  if (assessmentSolution.status === assessmentSolutionStatus.UNGRADED) {
+    //send regraded email
+    eventEmitter.emit(assessmentEvents.ASSESSMENT_GRADED_NOTIFICATION, {
+      assessmentSolution,
+    });
+  } else {
+    //send graded email
+    eventEmitter.emit(assessmentEvents.ASSESSMENT_REGRADED_NOTIFICATION, {
+      assessmentSolution,
+    });
+  }
 
   assessmentSolution.status = assessmentSolutionStatus.GRADED;
   assessmentSolution.obtainedMarks = marksObtained;

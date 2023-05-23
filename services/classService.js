@@ -1,6 +1,8 @@
 const Busboy = require("busboy");
 const csv = require("fast-csv");
 const mongoose = require("mongoose");
+const events = require("events");
+const eventEmitter = new events.EventEmitter();
 
 const { setAuthToken, verifyRefreshToken } = require("../utils/authToken");
 const MESSAGES = require("../constants/messages");
@@ -16,12 +18,32 @@ const Assessment = require("../models/assessment");
 const AssessmentSolution = require("../models/assessmentSolution");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const sendEmail = require("../utils/sendEmail");
+const sendEmail = require("../utils/email/sendEmail");
 const ErrorHandler = require("../utils/errorHandler");
 const { applyPagination } = require("../utils/generalHelpers");
 const { readCSV2JSON } = require("../utils/fileHelper");
 const classRegistration = require("../models/classRegistration");
 const { USER_ROLE } = require("../constants/user");
+const { studentEvents } = require("../constants/events");
+const { enqueueEmail } = require("../utils/queueHelper");
+const registrationRequestEmailTemplate = require("../utils/email/templates/registrationRequestEmail");
+
+const registrationRequestNotificationHandler = async ({
+  teacherName,
+  className,
+  email,
+}) => {
+  await enqueueEmail({
+    email,
+    subject: `Register on RapidCheck to join ${className}`,
+    message: registrationRequestEmailTemplate({ teacherName, className }),
+  });
+};
+
+eventEmitter.addListener(
+  studentEvents.STUDENT_REGISTRATION_REQUEST_NOTIFICATION,
+  registrationRequestNotificationHandler
+);
 
 exports.createClass = catchAsyncErrors(async (req, res, next) => {
   const { className, courseCode, classDescription } = req.body;
@@ -199,10 +221,10 @@ const addStudentToClass = async (
   }
 
   if (!studentRegistrationRequest) {
-    await sendEmail({
+    eventEmitter.emit(studentEvents.STUDENT_REGISTRATION_REQUEST_NOTIFICATION, {
+      teacherName: `${classToRegisterIn.teacherId?.firstName} ${classToRegisterIn.teacherId?.lastName}`,
+      className: classToRegisterIn.className,
       email,
-      subject: `Register for ${classToRegisterIn.className} on RapidCheck`,
-      message: `<p>Hello, please register, thsnsk</p>`,
     });
   }
 
@@ -220,7 +242,10 @@ exports.addSingleStudentToClass = catchAsyncErrors(async (req, res, next) => {
 
   let classExists;
 
-  classExists = await Class.findById(classId);
+  classExists = await Class.findOne({ _id: classId }).populate({
+    path: "teacherId",
+    model: "Teacher",
+  });
 
   // const studentAlreadyRegistered = await ClassRegistration.findOne({
   //   email,
@@ -243,7 +268,10 @@ exports.addMultipleStudentsToClass = catchAsyncErrors(
     const { classId } = req.params;
     const busboy = Busboy({ headers: req.headers });
 
-    const classExists = await Class.findById(classId);
+    const classExists = await Class.findOne({ _id: classId }).populate({
+      path: "teacherId",
+      model: "Teacher",
+    });
 
     if (!classExists) {
       return next(new ErrorHandler(MESSAGES.CLASS_NOT_FOUND, 404));
