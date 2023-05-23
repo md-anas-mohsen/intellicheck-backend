@@ -571,14 +571,14 @@ exports.viewStudentAnnouncements = catchAsyncErrors(async (req, res, next) => {
     const classMap = new Map();
     const classIdsArray = [...new Set(classIds)];
     
-    const classData = await Class.find(
-      { _id: { $in: classIdsArray } },
-      { _id: 1, className: 1 }
-    );
+    //const classData = await Class.find(
+    //  { _id: { $in: classIdsArray } },
+    //  { _id: 1, className: 1 }
+    //);
     
-    classData.forEach((classItem) => {
-      classMap.set(classItem._id.toString(), classItem.className);
-    });
+    //classData.forEach((classItem) => {
+    //  classMap.set(classItem._id.toString(), classItem.className);
+    //});
     
     const announcements_wo_class = await applyPagination(
       Announcement.find(whereParams, "title description _id classId"),
@@ -586,18 +586,19 @@ exports.viewStudentAnnouncements = catchAsyncErrors(async (req, res, next) => {
     );
     
     // Map the className based on classId
-    const announcements = announcements_wo_class.map((announcement) => {
-      return {
-        ...announcement._doc,
-        className: classMap.get(announcement.classId.toString()),
-      };
-    });
+    //const announcements = announcements_wo_class.map((announcement) => {
+    //  return {
+    //    ...announcement._doc,
+    //    className: classMap.get(announcement.classId.toString()),
+    //  };
+    //});
   
-    const count = await Announcement.count(whereParams);
+    //const count = await Announcement.count(whereParams);
 
     return res.status(200).json({
       success: true,
-      announcements,
+      //announcements,
+      announcements_wo_class,
       count,
     });
 
