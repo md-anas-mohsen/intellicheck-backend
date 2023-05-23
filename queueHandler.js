@@ -7,7 +7,7 @@ const chalk = require("chalk");
 const { QUEUE_NAMES, QUEUE_CONFIG, QUEUE_JOBS } = require("./constants/queue");
 
 const { gradeSolution } = require("./services/grading/gradingService");
-const sendEmail = require("./utils/sendEmail");
+const sendEmail = require("./utils/email/sendEmail");
 
 const Assessment = require("./models/assessment");
 const AssessmentSolution = require("./models/assessmentSolution");
