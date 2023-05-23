@@ -184,7 +184,7 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
       req.user?.role === USER_ROLE.STUDENT &&
       question.questionType !== questionType.MCQ
     ) {
-      question.msAnswer = undefined;
+      question.msAnswer = [];
       return question;
     }
 
