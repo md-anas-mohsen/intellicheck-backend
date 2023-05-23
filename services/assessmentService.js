@@ -176,8 +176,8 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
       .exec();
 
     if (
-      Date.now() <
-      new Date(assessment.dueDate).getTime() + assessment.duration
+      !!assessmentSolution &&
+      Date.now() < new Date(assessment.dueDate).getTime() + assessment.duration
     ) {
       return next(new ErrorHandler(MESSAGES.ASSESSMENT_GRADING_PROCESS, 403));
     }
