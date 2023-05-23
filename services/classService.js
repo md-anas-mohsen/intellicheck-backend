@@ -537,6 +537,90 @@ exports.viewAnnouncements = catchAsyncErrors(async (req, res, next) => {
     count,
   });
 });
+
+exports.viewStudentAnnouncements = catchAsyncErrors(async (req, res, next) => {
+  const { keyword } = req.query;
+
+  if (req.user?.role === USER_ROLE.STUDENT) {
+    const studentClasses = await ClassRegistration.find({
+      studentId: req.user?._id,
+    });
+
+    classIds = studentClasses.map((userClass) => userClass.classId);
+
+    const whereParams = {
+      classId: {$in: classIds},
+      ...(!!keyword && {
+        $or: [
+          {
+            description: {
+              $regex: keyword,
+              $options: "i",
+            },
+          },
+          {
+            title: {
+              $regex: keyword,
+              $options: "i",
+            },
+          },
+        ],
+      }),
+    };
+
+    const announcements = await applyPagination(
+      Announcement.aggregate([
+        {
+          $match: whereParams,
+        },
+        {
+          $lookup: {
+            from: "classRegistrations",
+            localField: "classId",
+            foreignField: "classId",
+            as: "classInfo",
+          },
+        },
+        {
+          $lookup: {
+            from: "class",
+            localField: "classId",
+            foreignField: "_id",
+            as: "classData",
+          },
+        },
+        {
+          $project: {
+            title: 1,
+            description: 1,
+            _id: 1,
+            classId: 1,
+            className: { $arrayElemAt: ["$classData.className", 0] },
+          },
+        },
+      ]),
+      req.query
+    );
+  
+  
+    const count = await Announcement.count(whereParams);
+
+    return res.status(200).json({
+      success: true,
+      announcements,
+      count,
+    });
+
+  }
+
+
+  else {
+    return next(new ErrorHandler(MESSAGES.CANNOT_GET_ANNOUNCEMENTS, 403));
+
+  }
+
+});
+
 exports.getClasses = catchAsyncErrors(async (req, res, next) => {
   const { keyword, courseCode } = req.query;
 

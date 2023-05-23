@@ -10,6 +10,7 @@ const MESSAGES = {
   USER_CREATION_SUCCESS: "User created successfully",
   CLASS_CREATION_SUCCESS: "Class created successfully",
   ANNOUNCEMENT_CREATION_SUCCESS: "Announcement created successfully",
+  CANNOT_GET_ANNOUNCEMENTS: "Cannot fetch announcements",
   ANNOUCEMENTS_FETCHED: "Annoucments fetched successfully",
   LOGIN_REQUIRED: "Login to view resource",
   NOT_FOUND: "Not found",
