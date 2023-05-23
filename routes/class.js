@@ -48,7 +48,7 @@ router.post(
 );
 
 router.get(
-  "/view-annoucements/:classId",
+  "/view-announcements/:classId",
   validator.query(announcementValidatorSchema.viewAnnouncementsRequestModel),
   classService.viewAnnouncements
 );

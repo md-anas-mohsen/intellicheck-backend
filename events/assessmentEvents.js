@@ -50,14 +50,14 @@ exports.assessmentCreatedNotification = async ({
     })
     .exec();
 
-  let emails = classStudentsToNotify.map(
-    (classStudent) => classStudent.studentId?.email
-  );
+  let emails = classStudentsToNotify
+    .map((classStudent) => classStudent.studentId?.email)
+    .filter((email) => !!email);
 
   let promises = emails.map((email) => {
     return enqueueEmail({
       email,
-      subject: `${assessment.name} Posted`,
+      subject: `${assessment.assessmentName} Posted`,
       message: assessmentCreatedEmailTemplate({
         className: teacherClass.className,
         assessmentName: assessment.assessmentName,
@@ -69,8 +69,8 @@ exports.assessmentCreatedNotification = async ({
 
   await Announcement.create({
     classId,
-    title: `${assessment.name} Posted`,
-    description: `${assessment.name} has been posted, it is ${
+    title: `${assessment.assessmentName} Posted`,
+    description: `${assessment.assessmentName} has been posted, it is ${
       assessment.duration / 60
     } minute(s) long and is of ${assessment.totalMarks} marks.`,
   });
