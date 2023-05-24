@@ -19,7 +19,7 @@ const {
 
 require("../events/assessmentEvents");
 
-const { applyPagination } = require("../utils/generalHelpers");
+const { applyPagination, shuffleArray } = require("../utils/generalHelpers");
 const { enqueueAssessmentSolutionAIGrading } = require("../utils/queueHelper");
 const { assessmentEvents } = require("../constants/events");
 
@@ -217,6 +217,7 @@ exports.viewAssessment = catchAsyncErrors(async (req, res, next) => {
       return question;
     }
 
+    question.msAnswer = [shuffleArray(question.msAnswer[0])];
     return question;
   });
 

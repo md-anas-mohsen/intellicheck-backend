@@ -29,3 +29,11 @@ exports.generatePasscode = (digits = 6) => {
     ? "0".repeat(PASSCODE_LENGTH)
     : `${Math.floor(10 ** digits - 1 + Math.random() * 9 * 10 ** digits - 1)}`;
 };
+
+exports.shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
