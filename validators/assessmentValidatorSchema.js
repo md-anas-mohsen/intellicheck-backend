@@ -11,8 +11,10 @@ const assessmentValidatorSchema = {
   createAssessmentRequestModel: Joi.object({
     assessmentName: Joi.string().max(50).required(),
     description: Joi.string().max(150).optional(),
-    openDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc(),
-    dueDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc(),
+    openDate: Joi.date().utc(),
+    dueDate: Joi.date().utc(),
+    // openDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc(),
+    // dueDate: Joi.date().format("YYYY-MM-DDTHH:mm:ss").utc(),
     duration: Joi.number().required(),
     questions: Joi.array().items(
       Joi.object().keys({
