@@ -66,6 +66,13 @@ router.get(
   assessmentService.getRegradeRequestsListing
 );
 
+router.get(
+  "/unchecked-assessments",
+  isAuthenticatedUser(USER_ROLE.TEACHER),
+  validator.query(assessmentValidatorSchema.getRegradeRequestsModel),
+  assessmentService.getUncheckedAssessmentsListing
+);
+
 router.post(
   "/ai-grade-assessment/:assessmentSolutionId",
   isAuthenticatedUser(USER_ROLE.TEACHER),

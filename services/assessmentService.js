@@ -882,7 +882,7 @@ exports.getRegradeRequestsListing = async (req, res, next) => {
   }
 
   if (!!classId) {
-    whereParams.assessmentId = classId;
+    whereParams.classId = classId;
   }
 
   whereParams.studentAnswers = {
@@ -940,6 +940,92 @@ exports.getRegradeRequestsListing = async (req, res, next) => {
   return res.status(200).json({
     success: true,
     regradeRequests,
+    count,
+  });
+};
+
+exports.getUncheckedAssessmentsListing = async (req, res, next) => {
+  let { studentId, classId } = req.query;
+
+  let whereParams = {};
+
+  if (!!studentId) {
+    whereParams.studentId = studentId;
+  }
+
+  const teacherClasses = await Class.find({
+    teacherId: req.user?._id,
+  });
+
+  const classIds = teacherClasses.map((teacherClass) => teacherClass._id);
+
+  if (
+    !!classId &&
+    classIds.findIndex((id) => id.toString() === classId) === -1
+  ) {
+    return next(new ErrorHandler(MESSAGES.FORBIDDEN, 403));
+  }
+
+  whereParams.classId = {
+    $in: classIds,
+  };
+
+  if (!!classId) {
+    whereParams.classId = classId;
+  }
+
+  whereParams.status = assessmentStatus.UNGRADED;
+  whereParams.obtainedMarks = { $ne: null, $exists: true };
+
+  const assessmentSolutionsPartiallyChecked = await applyPagination(
+    AssessmentSolution.find(whereParams)
+      .populate({
+        path: "studentId",
+        select: {
+          _id: 1,
+          firstName: 1,
+          lastName: 1,
+        },
+      })
+      .populate({
+        path: "assessmentId",
+        select: {
+          _id: 1,
+          assessmentName: 1,
+          totalMarks: 1,
+        },
+        populate: {
+          path: "classId",
+          select: {
+            _id: 1,
+            className: 1,
+            courseCode: 1,
+          },
+        },
+      }),
+    req.query
+  );
+
+  const count = await AssessmentSolution.count(whereParams);
+
+  const uncheckedAssessments = assessmentSolutionsPartiallyChecked.map(
+    (solution) => ({
+      _id: solution._id,
+      studentId: solution.studentId?._id,
+      studentFirstName: solution.studentId?.firstName,
+      studentLastName: solution.studentId?.lastName,
+      classId: solution.assessmentId?.classId?._id,
+      className: solution.assessmentId?.classId?.className,
+      courseCode: solution.assessmentId?.classId?.courseCode,
+      assessmentName: solution.assessmentId?.assessmentName,
+      obtainedMarks: solution.obtainedMarks,
+      totalMarks: solution.assessmentId.totalMarks,
+    })
+  );
+
+  return res.status(200).json({
+    success: true,
+    uncheckedAssessments,
     count,
   });
 };
