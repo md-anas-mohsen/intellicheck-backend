@@ -9,6 +9,7 @@ const Class = require("../models/class");
 const Question = require("../models/question");
 const ClassRegistration = require("../models/classRegistration");
 const AssessmentSolution = require("../models/assessmentSolution");
+const Course = require("../models/course");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const {
@@ -29,6 +30,7 @@ const {
   assessmentGradedNotification,
   assessmentCreatedNotification,
 } = require("../events/assessmentEvents");
+const { gradeAnswerWithAI } = require("../utils/gradingHelper");
 const eventEmitter = new EventEmitter();
 
 eventEmitter.addListener(
@@ -1060,3 +1062,29 @@ exports.gradeAssesmentWithAI = async (req, res) => {
     message: MESSAGES.ASSESSMENT_SOLUTION_GRADING_ENQUEUED,
   });
 };
+
+exports.gradeSingleQuestionWithAI = catchAsyncErrors(async (req, res, next) => {
+  const courseId = req.params.courseId;
+  let { markingScheme, answer, totalMarks } = req.body;
+
+  markingScheme = JSON.parse(markingScheme);
+
+  const course = await Course.findById(courseId);
+
+  if (!course) {
+    return next(new ErrorHandler(MESSAGES.COURSE_NOT_FOUND, 404));
+  }
+
+  // return res.status(200).json({
+  //   success: true,
+  // });
+
+  const { marks, semanticTextSimilarity } = await gradeAnswerWithAI(
+    course,
+    markingScheme,
+    answer,
+    totalMarks
+  );
+
+  return res.status(200).json({ marks, semanticTextSimilarity });
+});

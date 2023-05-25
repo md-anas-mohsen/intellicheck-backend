@@ -99,5 +99,10 @@ const assessmentValidatorSchema = {
     classId: Joi.string(),
     studentId: Joi.string(),
   }),
+  gradeAnswerWithAIRequestModel: Joi.object({
+    markingScheme: Joi.array().items(Joi.array().items(Joi.string())),
+    answer: Joi.string(),
+    totalMarks: Joi.number().min(1).max(2),
+  }),
 };
 module.exports = assessmentValidatorSchema;

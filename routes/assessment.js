@@ -79,4 +79,9 @@ router.post(
   assessmentService.gradeAssesmentWithAI
 );
 
+router.post(
+  "/ai-grade-question/:courseId",
+  assessmentService.gradeSingleQuestionWithAI
+);
+
 module.exports = router;

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>RapidCheck | Playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      body {
+        font-family: "Montserrat", "sans-serif";
+        overflow: hidden;
+      }
+      .navbar {
+        background-color: #ff9700;
+        border-bottom: 2px solid black;
+        font-family: "Abril Fatface", cursive;
+      }
+      .btn-primary {
+        background-color: #6096b4;
+      }
+      .page-container {
+        display: flex;
+        padding: 0;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .top-half-orange {
+        background-color: #ff9700;
+        flex: 1;
+        height: 50vh;
+      }
+      .bottom-half-black {
+        background-color: black;
+        flex: 1;
+        height: 50vh;
+      }
+      .form-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        max-height: 800px;
+        overflow-y: scroll;
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .form-container::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar bg-body-tertiary fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img
+            src="https://res.cloudinary.com/clicktobuy/image/upload/v1684794313/RapidCheck-logo_mb1wn5.png"
+            alt="Logo"
+            width="25%"
+            class="d-inline-block align-text-center"
+          />
+        </a>
+      </div>
+    </nav>
+    <div class="container-fluid page-container">
+      <div class="top-half-orange"></div>
+      <div class="bottom-half-black"></div>
+      <div class="form-container">
+        <div class="col-10 card card-body m-auto mt-5">
+          <form class="row g-3">
+            <h1 style="font-family: 'Abril Fatface', cursive">
+              Semantic Text Similarity Playground
+            </h1>
+            <div class="col-12">
+              <label for="inputAddress" class="form-label"
+                >Marking Scheme</label
+              >
+              <div id="markScheme">
+                <div id="markSchemeAnswer1" class="my-3">
+                  <div
+                    id="markSchemeAnswer1Variations"
+                    class="d-flex flex-column w-100"
+                  >
+                    <div
+                      id="markSchemeAnswer1Variation1"
+                      class="flex-grow-1 my-1 d-flex align-items-center justify-content-between"
+                    >
+                      <input
+                        name="mark_scheme_answer_1_1"
+                        type="text"
+                        class="form-control w-50 flex-grow-1"
+                        id="markSchemeInput1"
+                      />
+                      <!-- <button
+                        msAnswer="${markSchemeAnswers}"
+                        class="btn btn-danger removeAnswerVariation"
+                      >
+                        - Variation
+                      </button> -->
+                    </div>
+                  </div>
+
+                  <button
+                    msAnswer="1"
+                    class="btn btn-primary mt-2 w-50 addAnswerVariation"
+                  >
+                    + Variation
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <button id="addAnswer" class="btn btn-primary w-100">
+                + Add Answer
+              </button>
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Total Marks </label>
+              <input
+                name="total_marks"
+                type="number"
+                class="form-control"
+                id="totalMarks"
+              />
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Your Answer </label>
+              <input
+                name="my_answer"
+                type="text"
+                class="form-control"
+                id="myAnswerInput"
+              />
+            </div>
+
+            <div class="col-12">
+              <button
+                id="checkAnswer"
+                type="submit"
+                class="btn btn-primary w-100"
+              >
+                Check
+              </button>
+            </div>
+            <div id="marksScored" class="card text-bg-success mb-3 w-100">
+              <div class="card-header hidden">Marks Scored</div>
+              <div class="card-body">
+                <h5 id="marksScoredValue" class="card-title">0.00</h5>
+              </div>
+            </div>
+            <div
+              id="semanticTextSimilarity"
+              class="card text-bg-primary mb-3 w-100"
+            >
+              <div class="card-header hidden">Semantic Text Similarity</div>
+              <div class="card-body">
+                <h5 id="semanticTextSimilarityValue" class="card-title">
+                  0.00
+                </h5>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    let markSchemeAnswers;
+    $(document).ready(() => {
+      $("#marksScored").hide();
+      $("#semanticTextSimilarity").hide();
+      markSchemeAnswers = 1;
+    });
+
+    $("form").submit((e) => e.preventDefault());
+
+    $("#checkAnswer").click(async (e) => {
+      e.preventDefault();
+      let markingScheme = {};
+
+      let formData = Object.fromEntries(
+        new FormData(document.querySelector("form")).entries()
+      );
+
+      // formData["mark_scheme"] = JSON.parse($("#markSchemeInput").val())
+      // formData["my_answer"] = $("#myAnswerInput").val()
+
+      console.log(formData);
+
+      for (const key in formData) {
+        if (Object.hasOwnProperty.call(formData, key)) {
+          const keyParts = key.split("_"); // Splitting the key into parts
+
+          if (keyParts.length === 5) {
+            const schemeKey = `mark_scheme_${keyParts[keyParts.length - 2]}`;
+
+            // Creating the scheme object if it doesn't exist
+            if (!markingScheme.hasOwnProperty(schemeKey)) {
+              markingScheme[schemeKey] = [];
+            }
+
+            // Adding the key-value pair to the scheme object
+
+            if (!!formData[key]) {
+              markingScheme[schemeKey].push(formData[key]);
+            }
+          }
+        }
+      }
+
+      markingScheme = Object.values(markingScheme);
+      console.log(markingScheme);
+
+      const API_URL = "http://api.rapidcheck.babusar.cloud";
+      const answer = $("#myAnswerInput").val();
+      const totalMarks = parseInt($("#totalMarks").val());
+
+      const { marks, semanticTextSimilarity } = await $.post(
+        `${API_URL}/api/assessments/ai-grade-question/641f579ab7d05bece32e6d53`,
+        {
+          markingScheme: JSON.stringify(markingScheme),
+          answer,
+          totalMarks,
+        }
+      );
+
+      console.log(marks, semanticTextSimilarity);
+
+      $("#marksScoredValue").text(`${marks}/${totalMarks}`);
+      $("#semanticTextSimilarityValue").text(semanticTextSimilarity);
+      $("#marksScored").show();
+      $("#semanticTextSimilarity").show();
+    });
+
+    $(document).on("click", "button.removeAnswerVariation", (e) => {
+      console.log(e.target);
+      let markSchemeAnswer = parseInt(e.target.getAttribute("msanswer"));
+      let variationNumber = parseInt(e.target.getAttribute("variationnumber"));
+
+      console.log(markSchemeAnswer);
+      console.log(variationNumber);
+
+      $(
+        `#markSchemeAnswer${markSchemeAnswer}Variation${variationNumber}`
+      ).remove();
+    });
+
+    $(document).on("click", "button.removeAnswer", (e) => {
+      let markSchemeAnswer = parseInt(e.target.getAttribute("msanswer"));
+
+      console.log(markSchemeAnswer);
+
+      $(`#markSchemeAnswer${markSchemeAnswer}`).remove();
+    });
+
+    $(document).on("click", "button.addAnswerVariation", (e) => {
+      console.log("CLICKED");
+      let markSchemeAnswer = parseInt(e.target.getAttribute("msanswer"));
+      let markSchemeAnswerVariations = parseInt(
+        $(`#markSchemeAnswer${markSchemeAnswer}Variations`).children().length
+      );
+      let variationNumber = markSchemeAnswerVariations + 1;
+
+      console.log(markSchemeAnswer);
+      console.log(variationNumber);
+
+      $(`#markSchemeAnswer${markSchemeAnswer}Variations`).append(
+        `
+        <div
+            id="markSchemeAnswer${markSchemeAnswer}Variation${variationNumber}"
+            class="flex-grow-1 my-1 d-flex align-items-center justify-content-between"
+        >
+            <input
+                name="mark_scheme_answer_${markSchemeAnswers}_${variationNumber}"
+                type="text"
+                class="form-control w-50 flex-grow-1"
+                id="markSchemeInput1"
+            />
+            <button
+                msAnswer="${markSchemeAnswers}"
+                variationNumber="${variationNumber}"
+                class="btn btn-danger removeAnswerVariation"
+            >
+                - Variation
+            </button>
+        </div>
+        `
+      );
+    });
+
+    $("#addAnswer").click((e) => {
+      markSchemeAnswers += 1;
+
+      $("#markScheme").append(
+        `
+        <div id="markSchemeAnswer${markSchemeAnswers}" class="my-3">
+            <div
+                id="markSchemeAnswer${markSchemeAnswers}Variations"
+                class="d-flex flex-column w-100"
+            >
+                <div
+                    class="flex-grow-1 d-flex align-items-center justify-content-between"
+                >
+                    <input
+                    name="mark_scheme_answer_${markSchemeAnswers}_1"
+                    type="text"
+                    class="form-control w-50 flex-grow-1"
+                    id="markSchemeInput1"
+                    />
+                </div>
+            </div>
+
+            <button
+                msAnswer="${markSchemeAnswers}"
+                class="btn btn-primary mt-2 w-50 addAnswerVariation"
+            >
+                + Variation
+            </button>
+
+            <button
+                msAnswer="${markSchemeAnswers}"
+                class="btn btn-danger mt-2 w-50 removeAnswer"
+            >
+                - Answer
+            </button>
+        </div>
+        `
+      );
+    });
+  </script>
+</html>

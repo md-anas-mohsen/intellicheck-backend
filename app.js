@@ -4,6 +4,8 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const chalk = require("chalk");
 const logger = require("./middlewares/logReqRes");
+const cors = require("cors");
+const path = require("path");
 
 const users = require("./routes/user");
 const classes = require("./routes/class");
@@ -17,6 +19,12 @@ const { enqueueTestJob } = require("./utils/queueHelper");
 
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -50,6 +58,14 @@ app.get("/", async (req, res) => {
     success: true,
     message: "Welcome to the RapidCheck API",
   });
+});
+
+app.get("/playground", (req, res) => {
+  res.sendFile(path.join(__dirname, "./views/playground.html"));
+});
+
+app.get("/sample-assessment", (req, res) => {
+  res.sendFile(path.join(__dirname, "./views/sampleAssessment.html"));
 });
 
 app.use(logErrorMiddleware);
