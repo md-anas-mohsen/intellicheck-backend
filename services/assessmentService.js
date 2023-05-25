@@ -551,8 +551,7 @@ exports.manuallyGradeAssessment = catchAsyncErrors(async (req, res, next) => {
   await assessmentSolution.save();
 
   return res.status(200).json({
-    message: "Graded",
-    assessmentSolution,
+    message: "Graded"
   });
 });
 
