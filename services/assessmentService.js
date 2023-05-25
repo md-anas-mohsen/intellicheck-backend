@@ -834,7 +834,6 @@ exports.createRegradeRequest = async (req, res, next) => {
 
   return res.status(201).json({
     message: MESSAGES.REGRADE_REQUEST_SUBMITTED,
-    studentAnswers: assessmentSolution.studentAnswers,
   });
 };
 
