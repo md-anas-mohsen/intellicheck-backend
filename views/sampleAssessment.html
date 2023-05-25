@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>RapidCheck | Playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      body {
+        font-family: "Montserrat", "sans-serif";
+        overflow: hidden;
+      }
+      .navbar {
+        background-color: #ff9700;
+        border-bottom: 2px solid black;
+        font-family: "Abril Fatface", cursive;
+      }
+      .btn-primary {
+        background-color: #6096b4;
+      }
+      .page-container {
+        display: flex;
+        padding: 0;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .top-half-orange {
+        background-color: #ff9700;
+        flex: 1;
+        height: 50vh;
+      }
+      .bottom-half-black {
+        background-color: black;
+        flex: 1;
+        height: 50vh;
+      }
+      .form-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        max-height: 800px;
+        overflow-y: scroll;
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .form-container::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar bg-body-tertiary fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+          <img
+            src="https://res.cloudinary.com/clicktobuy/image/upload/v1684794313/RapidCheck-logo_mb1wn5.png"
+            alt="Logo"
+            width="25%"
+            class="d-inline-block align-text-center"
+          />
+        </a>
+      </div>
+    </nav>
+    <div class="container-fluid page-container">
+      <div class="top-half-orange"></div>
+      <div class="bottom-half-black"></div>
+      <div class="form-container">
+        <div class="col-10 card card-body m-auto mt-5">
+          <form class="row g-3">
+            <h1 style="font-family: 'Abril Fatface', cursive">
+              Sample Assessment
+            </h1>
+            <div class="col-12">
+              <label for="inputAddress" class="form-label"
+                ><h4 class="mt-4">
+                  Q1. State the difference between a scalar quantity and a
+                  vector quantity
+                  <br />
+                  <span style="font-weight: bold">[1 mark]</span>
+                </h4></label
+              >
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Your Answer </label>
+              <input
+                name="answer1"
+                type="text"
+                class="form-control"
+                id="answer1Input"
+              />
+            </div>
+
+            <div id="marksScored1" class="card text-bg-success mb-3 w-50">
+              <div class="card-header hidden">Marks Scored</div>
+              <div class="card-body">
+                <h5 id="marksScored1Value" class="card-title">0.00</h5>
+              </div>
+            </div>
+            <div
+              id="semanticTextSimilarity1"
+              class="card text-bg-primary mb-3 w-50"
+            >
+              <div class="card-header hidden">Semantic Text Similarity</div>
+              <div class="card-body">
+                <h5 id="semanticTextSimilarity1Value" class="card-title">
+                  0.00
+                </h5>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button
+                id="checkAnswer1"
+                type="submit"
+                class="btn btn-primary w-100"
+              >
+                Check
+              </button>
+            </div>
+
+            <div class="col-12">
+              <label for="inputAddress" class="form-label"
+                ><h4 class="mt-4">
+                  Q2. Emissions from the radioactive source are random in time.
+                  State what is meant by random in time.
+                  <br />
+                  <span style="font-weight: bold">[1 marks]</span>
+                </h4></label
+              >
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Your Answer </label>
+              <input
+                name="answer2"
+                type="text"
+                class="form-control"
+                id="answer2Input"
+              />
+            </div>
+
+            <div id="marksScored2" class="card text-bg-success mb-3 w-50">
+              <div class="card-header hidden">Marks Scored</div>
+              <div class="card-body">
+                <h5 id="marksScored2Value" class="card-title">0.00</h5>
+              </div>
+            </div>
+            <div
+              id="semanticTextSimilarity2"
+              class="card text-bg-primary mb-3 w-50"
+            >
+              <div class="card-header hidden">Semantic Text Similarity</div>
+              <div class="card-body">
+                <h5 id="semanticTextSimilarity2Value" class="card-title">
+                  0.00
+                </h5>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button
+                id="checkAnswer2"
+                type="submit"
+                class="btn btn-primary w-100"
+              >
+                Check
+              </button>
+            </div>
+
+            <div class="col-12">
+              <label for="inputAddress" class="form-label"
+                ><h4 class="mt-4">
+                  Q3. By writing about the forces between molecules and the
+                  motion of molecules, explain why the rate of evaporation is
+                  greater when a liquid is hotter.
+                  <br />
+                  <span style="font-weight: bold">[1 marks]</span>
+                </h4></label
+              >
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Your Answer </label>
+              <input
+                name="answer3"
+                type="text"
+                class="form-control"
+                id="answer3Input"
+              />
+            </div>
+
+            <div id="marksScored3" class="card text-bg-success mb-3 w-50">
+              <div class="card-header hidden">Marks Scored</div>
+              <div class="card-body">
+                <h5 id="marksScored3Value" class="card-title">0.00</h5>
+              </div>
+            </div>
+            <div
+              id="semanticTextSimilarity3"
+              class="card text-bg-primary mb-3 w-50"
+            >
+              <div class="card-header hidden">Semantic Text Similarity</div>
+              <div class="card-body">
+                <h5 id="semanticTextSimilarity3Value" class="card-title">
+                  0.00
+                </h5>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button
+                id="checkAnswer3"
+                type="submit"
+                class="btn btn-primary w-100"
+              >
+                Check
+              </button>
+            </div>
+
+            <div class="col-12">
+              <label for="inputAddress" class="form-label"
+                ><h4 class="mt-4">
+                  Q4. The wave passes from deep water into shallow water. The
+                  speed of the wave is less in shallow water. State and explain
+                  how this effects the wavelength of the wave.
+                  <br />
+                  <span style="font-weight: bold">[2 marks]</span>
+                </h4></label
+              >
+            </div>
+            <div class="col-12">
+              <label for="inputAddress2" class="form-label">Your Answer </label>
+              <input
+                name="answer4"
+                type="text"
+                class="form-control"
+                id="answer4Input"
+              />
+            </div>
+
+            <div id="marksScored4" class="card text-bg-success mb-3 w-50">
+              <div class="card-header hidden">Marks Scored</div>
+              <div class="card-body">
+                <h5 id="marksScored4Value" class="card-title">0.00</h5>
+              </div>
+            </div>
+            <div
+              id="semanticTextSimilarity4"
+              class="card text-bg-primary mb-3 w-50"
+            >
+              <div class="card-header hidden">Semantic Text Similarity</div>
+              <div class="card-body">
+                <h5 id="semanticTextSimilarity4Value" class="card-title">
+                  0.00
+                </h5>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button
+                id="checkAnswer4"
+                type="submit"
+                class="btn btn-primary w-100"
+              >
+                Check
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    let markSchemeAnswers;
+    const API_URL = "http://api.rapidcheck.babusar.cloud";
+
+    $(document).ready(() => {
+      $("#marksScored1").hide();
+      $("#semanticTextSimilarity1").hide();
+      $("#marksScored2").hide();
+      $("#semanticTextSimilarity2").hide();
+      $("#marksScored3").hide();
+      $("#semanticTextSimilarity3").hide();
+      $("#marksScored4").hide();
+      $("#semanticTextSimilarity4").hide();
+    });
+
+    $("form").submit((e) => e.preventDefault());
+
+    $("#checkAnswer1").click(async (e) => {
+      e.preventDefault();
+      $("#checkAnswer1").prop("disabled", true);
+
+      markingScheme = [
+        [
+          "vector quantity has direction",
+          "scalar quantity does not have direction",
+        ],
+      ];
+
+      const answer = $("#answer1Input").val();
+      const totalMarks = 1;
+
+      const { marks, semanticTextSimilarity } = await $.post(
+        `${API_URL}/api/assessments/ai-grade-question/641f579ab7d05bece32e6d53`,
+        {
+          markingScheme: JSON.stringify(markingScheme),
+          answer,
+          totalMarks,
+        }
+      );
+
+      console.log(marks, semanticTextSimilarity);
+
+      $("#marksScored1Value").text(`${marks}/${totalMarks}`);
+      $("#semanticTextSimilarity1Value").text(semanticTextSimilarity);
+      $("#marksScored1").show();
+      $("#semanticTextSimilarity1").show();
+      $("#checkAnswer1").prop("disabled", false);
+    });
+
+    $("#checkAnswer2").click(async (e) => {
+      e.preventDefault();
+      $("#checkAnswer2").prop("disabled", true);
+
+      markingScheme = [
+        [
+          "time between emission varies",
+          "Time between emissions unpredictable",
+          "Different readings",
+          "Different readings when repeated for same time",
+        ],
+      ];
+
+      const answer = $("#answer2Input").val();
+      const totalMarks = 1;
+
+      const { marks, semanticTextSimilarity } = await $.post(
+        `${API_URL}/api/assessments/ai-grade-question/641f579ab7d05bece32e6d53`,
+        {
+          markingScheme: JSON.stringify(markingScheme),
+          answer,
+          totalMarks,
+        }
+      );
+
+      console.log(marks, semanticTextSimilarity);
+
+      $("#marksScored2Value").text(`${marks}/${totalMarks}`);
+      $("#semanticTextSimilarity2Value").text(semanticTextSimilarity);
+      $("#marksScored2").show();
+      $("#semanticTextSimilarity2").show();
+      $("#checkAnswer2").prop("disabled", false);
+    });
+
+    $("#checkAnswer3").click(async (e) => {
+      e.preventDefault();
+      $("#checkAnswer3").prop("disabled", true);
+
+      markingScheme = [
+        ["molecules move faster", "Molecules have higher energy"],
+        [
+          "more molecules have energy",
+          "Molecules have speed to break bonds",
+          "Molecules overcome forces",
+        ],
+      ];
+
+      const answer = $("#answer3Input").val();
+      const totalMarks = 2;
+
+      const { marks, semanticTextSimilarity } = await $.post(
+        `${API_URL}/api/assessments/ai-grade-question/641f579ab7d05bece32e6d53`,
+        {
+          markingScheme: JSON.stringify(markingScheme),
+          answer,
+          totalMarks,
+        }
+      );
+
+      console.log(marks, semanticTextSimilarity);
+
+      $("#marksScored3Value").text(`${marks}/${totalMarks}`);
+      $("#semanticTextSimilarity3Value").text(semanticTextSimilarity);
+      $("#marksScored3").show();
+      $("#semanticTextSimilarity3").show();
+      $("#checkAnswer3").prop("disabled", false);
+    });
+
+    $("#checkAnswer4").click(async (e) => {
+      e.preventDefault();
+      $("#checkAnswer4").prop("disabled", true);
+
+      markingScheme = [
+        ["Wavelength decreases"],
+        [
+          "travels a shorter distance in the same time",
+          "Frequency stays the same",
+        ],
+      ];
+
+      const answer = $("#answer4Input").val();
+      const totalMarks = 2;
+
+      const { marks, semanticTextSimilarity } = await $.post(
+        `${API_URL}/api/assessments/ai-grade-question/641f579ab7d05bece32e6d53`,
+        {
+          markingScheme: JSON.stringify(markingScheme),
+          answer,
+          totalMarks,
+        }
+      );
+
+      console.log(marks, semanticTextSimilarity);
+
+      $("#marksScored4Value").text(`${marks}/${totalMarks}`);
+      $("#semanticTextSimilarity4Value").text(semanticTextSimilarity);
+      $("#marksScored4").show();
+      $("#semanticTextSimilarity4").show();
+      $("#checkAnswer4").prop("disabled", false);
+    });
+  </script>
+</html>
