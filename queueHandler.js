@@ -36,9 +36,6 @@ const worker = new Worker(
         await handleGradeSolutionQueueJob(job.data);
         break;
       }
-      case QUEUE_JOBS.NOTIFICATION: {
-        break;
-      }
       case QUEUE_JOBS.TEST_JOB: {
         console.log(chalk.bgCyanBright(`TEST QUEUE JOB RUN`));
         break;
