@@ -4,6 +4,7 @@ const Announcement = require("../models/announcement");
 const { enqueueEmail } = require("../utils/queueHelper");
 const assessmentRegradedEmailTemplate = require("../utils/email/templates/assessmentRegradedEmail");
 const assessmentCreatedEmailTemplate = require("../utils/email/templates/assessmentCreatedEmail");
+const assessmentGradedEmailTemplate = require("../utils/email/templates/assessmentGradedEmail");
 
 exports.assessmentRegradedNotification = async ({ assessmentSolution }) => {
   if (assessmentSolution.studentId?.settings?.emailsOn) {

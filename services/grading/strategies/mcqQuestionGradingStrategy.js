@@ -6,6 +6,10 @@ class McqQuestionGradingStrategy extends QuestionGradingStrategy {
   }
 
   async gradeAnswer() {
+    console.log(
+      `${this._answer.toLowerCase()} === ${this._question?.msAnswer[0][0].toLowerCase()}`
+    );
+
     if (
       this._answer.toLowerCase() ===
       this._question?.msAnswer[0][0].toLowerCase()
